@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1b1f4b">
+<title>Cube Hop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <span id="cubes">◆ 0</span>
+  <span id="level"></span>
+  <div class="meters">
+    <label title="Microphone">🎤<i><b id="mMic"></b></i></label>
+    <label title="Shake speed">📳<i><b id="mShake"></b></i></label>
+    <label title="Ghost energy">✨<i><b id="mEnergy"></b></i></label>
+  </div>
+</div>
+<div id="hint"></div>
+
+<div id="title" class="screen">
+  <h1>CUBE<br>HOP</h1>
+  <button id="start">PLAY</button>
+  <p>📱 Tilt = walk · Tap = jump<br>🗣️ Shout = super jump · 📳 Shake = ghost blocks</p>
+  <p class="pc">💻 Arrows walk · Space jump · Shift super jump · hold E = shake</p>
+</div>
+
+<div id="win" class="screen hidden">
+  <h1>YOU<br>WIN!</h1>
+  <p id="score"></p>
+  <button id="again">PLAY AGAIN</button>
+</div>
+
+<div id="rotate" class="screen">↻<p>Turn your phone sideways</p></div>
+
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

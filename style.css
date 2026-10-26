@@ -1,0 +1,87 @@
+* { box-sizing: border-box; margin: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #1b1f4b;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+#hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  font-size: 12px;
+  text-shadow: 2px 2px 0 #0006;
+  pointer-events: none;
+}
+#cubes { color: #ffd84a; }
+.meters { margin-left: auto; display: flex; gap: 10px; }
+.meters i { display: inline-block; width: 48px; height: 10px; margin-left: 4px; border: 2px solid #fff; background: #0004; vertical-align: middle; }
+.meters b { display: block; height: 100%; width: 0; background: #ffd84a; }
+#mShake { background: #7fe0c2; }
+#mEnergy { background: #b28dff; }
+
+#hint {
+  position: fixed;
+  top: 30%; left: 0; right: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 2;
+  white-space: pre-line;
+  text-shadow: 3px 3px 0 #1b1f4b;
+  opacity: 0;
+  pointer-events: none;
+}
+#hint.show { animation: hint 4s; }
+@keyframes hint { 10%, 80% { opacity: 1; } to { opacity: 0; } }
+
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 20px;
+  text-align: center;
+  background: #1b1f4b99;
+}
+.screen p { font-size: 10px; line-height: 2.2; }
+h1 { font-size: 44px; line-height: 1.2; color: #ffd84a; text-shadow: 4px 4px 0 #e63946; }
+
+button {
+  font: inherit;
+  font-size: 16px;
+  padding: 14px 28px;
+  border: 0;
+  background: #ffd84a;
+  color: #1b1f4b;
+  box-shadow: 0 6px 0 #c9971f;
+  cursor: pointer;
+}
+button:active { transform: translateY(4px); box-shadow: 0 2px 0 #c9971f; }
+
+.hidden { display: none !important; }
+
+#rotate { display: none; z-index: 10; font-size: 48px; background: #1b1f4b; }
+@media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+@media (pointer: coarse) { .pc { display: none; } }
