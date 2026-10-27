@@ -78,7 +78,7 @@ function music() { // slows and drops in pitch as play time winds down, goes off
   nextNote = ac.currentTime + 0.22 / fx.musicRate;
 }
 
-$('mute').onclick = () => { muted = !muted; $('mute').textContent = muted ? '🔇' : '🔊'; };
+onPress($('mute'), () => { muted = !muted; $('mute').textContent = muted ? '🔇' : '🔊'; });
 
 // ---------- game state ----------
 let lvl = 0, map, player, enemies, parts = [], total = 0, startTotal = 0, camX = 0, t = 0, dead = 0, spawn;
@@ -102,6 +102,14 @@ function loadLevel(i) {
 function respawn() {
   player = { x: spawn.x, y: spawn.y, w: 10, h: 14, vx: 0, vy: 0, face: 1, coyote: 0 };
   dead = 0;
+}
+
+// Buttons act when the finger lifts: some phones stop sending clicks on a no-scroll page.
+// A press must start on the button; click still works for keyboards and tests (detail 0).
+function onPress(el, fn) {
+  el.onpointerdown = () => el.armed = true;
+  el.onpointerup = e => el.armed && (el.armed = false, fn(e));
+  el.onclick = e => e.detail === 0 && fn(e);
 }
 
 addEventListener('error', e => toast('⚠ ' + e.message)); // show errors on the phone screen while testing

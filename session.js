@@ -133,11 +133,7 @@ function modal(html, buttons = []) {
   for (const [label, fn, cls] of buttons) {
     const b = document.createElement('button');
     b.textContent = label; b.className = cls || '';
-    // act when the finger lifts (some phones drop the click on a no-scroll page);
-    // click still works for keyboard/tests (detail 0), and a press must start on the button
-    b.onpointerdown = () => b.armed = true;
-    b.onpointerup = () => b.armed && (b.armed = false, fn());
-    b.onclick = e => e.detail === 0 && fn();
+    onPress(b, () => fn());
     m.querySelector('.btns').append(b);
   }
   m.classList.remove('hidden');
@@ -343,20 +339,20 @@ function devCard() {
     ['🔒 Use up the week', lockWeek, 'ghost'], ['✕ Close', closeModal],
   ]) {
     const b = document.createElement('button');
-    b.textContent = label; b.className = cls || ''; b.onclick = fn;
+    b.textContent = label; b.className = cls || ''; onPress(b, fn);
     $('devToggles').append(b);
   }
 }
 
 // ---------- buttons ----------
-$('continue').onclick = () => { unlock(); const s = get('save', { lvl: 0, total: 0 }); startSession(s.lvl, s.total); };
-$('newGame').onclick = () => { unlock(); startSession(0, 0); };
-$('parents').onclick = () => grownUp(settingsCard, showTitle);
-$('resetWeek').onclick = () => { // for testing; behind the grown-up question unless dev mode is on
+onPress($('continue'), () => { unlock(); const s = get('save', { lvl: 0, total: 0 }); startSession(s.lvl, s.total); });
+onPress($('newGame'), () => { unlock(); startSession(0, 0); });
+onPress($('parents'), () => grownUp(settingsCard, showTitle));
+onPress($('resetWeek'), () => { // for testing; behind the grown-up question unless dev mode is on
   const reset = () => { week.used = 0; put('week', week); showTitle(); };
   S.dev ? reset() : grownUp(reset, showTitle);
-};
-$('pause').onclick = () => modal('<h2>⏸ Paused</h2>', [['▶ Resume', closeModal], ['🏁 Stop playing', () => endSession()]]);
-$('devBtn').onclick = devCard;
-$('calmBtn').onclick = () => calm(() => { invertUntil = 0; success('Controls are back to normal 😌'); }, closeModal);
+});
+onPress($('pause'), () => modal('<h2>⏸ Paused</h2>', [['▶ Resume', closeModal], ['🏁 Stop playing', () => endSession()]]));
+onPress($('devBtn'), devCard);
+onPress($('calmBtn'), () => calm(() => { invertUntil = 0; success('Controls are back to normal 😌'); }, closeModal));
 showTitle();
