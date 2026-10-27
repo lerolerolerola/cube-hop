@@ -132,7 +132,12 @@ function modal(html, buttons = []) {
   m.innerHTML = `<div class="card">${html}<div class="btns"></div></div>`;
   for (const [label, fn, cls] of buttons) {
     const b = document.createElement('button');
-    b.textContent = label; b.className = cls || ''; b.onclick = fn;
+    b.textContent = label; b.className = cls || '';
+    // act when the finger lifts (some phones drop the click on a no-scroll page);
+    // click still works for keyboard/tests (detail 0), and a press must start on the button
+    b.onpointerdown = () => b.armed = true;
+    b.onpointerup = () => b.armed && (b.armed = false, fn());
+    b.onclick = e => e.detail === 0 && fn();
     m.querySelector('.btns').append(b);
   }
   m.classList.remove('hidden');
@@ -186,7 +191,7 @@ function onLevelDone() { // called by game.js when the player reaches a door
   put('save', { lvl: next, total });
   if (timeUp) return endSession('You finished just in time!', true);
   modal(`<h2>${last ? '🏆 You finished every level!' : '⭐ Level complete!'}</h2><p>◆ ${total} cubes · progress saved</p>`, [
-    [last ? '▶ Play again' : '▶ Next level', () => { closeModal(); loadLevel(next); }],
+    [last ? '▶ Play again' : '▶ Next level', () => { loadLevel(next); closeModal(); }],
     ['🏁 Stop here', () => endSession('Great playing!', true)],
   ]);
 }

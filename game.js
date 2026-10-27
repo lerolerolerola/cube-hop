@@ -104,6 +104,8 @@ function respawn() {
   dead = 0;
 }
 
+addEventListener('error', e => toast('⚠ ' + e.message)); // show errors on the phone screen while testing
+
 function toast(text) {
   const h = $('hint');
   h.textContent = text;
