@@ -2,7 +2,7 @@
 // The phone's sensors are used by session.js (breaks and stopping play), not to steer.
 
 // ---- physics (pixels per frame at 60fps) ----
-const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, WALK = 1.6, DASH = 4.5;
+const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, DOUBLE = 5, WALK = 1.6, DASH = 4.5;
 const LIGHT = 'rgba(255,255,255,.3)', DARK = 'rgba(0,0,0,.18)', INK = '#1b1f4b';
 
 const $ = id => document.getElementById(id);
@@ -169,10 +169,12 @@ function update() {
     p.vy = Math.min(p.vy + GRAV, 7);
   }
   p.coyote = p.ground ? 6 : p.coyote - 1; // can still jump a few frames after walking off a ledge
-  if (p.coyote > 0 && jumpBuf > 0) {
-    p.vy = -JUMP; p.dash = 0;
+  if (p.ground) p.jumps = 0;
+  if (jumpBuf > 0 && (p.coyote > 0 || p.jumps < 2)) { // A jumps, A again in the air = double jump
+    const air = p.coyote <= 0;
+    p.vy = air ? -DOUBLE : -JUMP; p.jumps = air ? 2 : 1; p.dash = 0;
     p.coyote = 0; jumpBuf = 0;
-    burst(p.x + 5, p.y + 14, '#fff', 5); sfx(520, 0.12);
+    burst(p.x + 5, p.y + 14, air ? '#7fe0c2' : '#fff', air ? 10 : 5); sfx(air ? 780 : 520, 0.12);
   }
   jumpBuf--;
   move(p);
@@ -187,7 +189,8 @@ function update() {
   if (p.y > H + 16) return die();
 
   for (const e of enemies) {
-    e.vx = e.dir * 0.5; e.vy = Math.min(e.vy + GRAV, 7); move(e);
+    e.vx = e.dir * (LEVELS[lvl].enemySpeed || 0.5); // later levels have faster enemies
+    e.vy = Math.min(e.vy + GRAV, 7); move(e);
     const ahead = tile(Math.floor((e.dir > 0 ? e.x + e.w + 1 : e.x - 1) / T), Math.floor((e.y + e.h + 2) / T));
     if (e.wall || (e.ground && !solid(ahead))) e.dir *= -1;
     if (e.y > H + 16) e.dead = true;

@@ -9,9 +9,20 @@ The game plays like a normal mobile game (D-pad + A/B buttons). The phone's sens
 | Phone | PC (testing) | |
 |---|---|---|
 | D-pad ◀ ▶ | Arrow keys / A D | Walk |
-| A (or D-pad ▲) | Space / W / ↑ | Jump |
+| A (or D-pad ▲) | Space / W / ↑ | Jump; press again in the air = double jump |
 | B | Shift / X | Dash (one per jump, knocks out enemies) |
 | Shake hard | Hold E | Simulates an "angry shake" |
+
+Levels get harder and each one teaches a move: **1** jump · **2** double jump (tall walls) · **3** dash (wide gaps) · **4** everything combined, with faster enemies.
+
+## Dev mode (testing the friction mechanics)
+
+Open the game with `?dev` at the end of the address (e.g. https://lerolerolerola.github.io/cube-hop/?dev), or switch it on in ⚙ Grown-ups → Testing. A 🛠 button appears in the game:
+
+- **Jump the clock:** Break, Wind down, Time's up, +30/60/90/120/150 s of overtime. The real sequence plays, following the grown-up settings.
+- **One effect by itself:** gray, negative, music, swapped controls, ignored jumps, no checkpoints, freeze, angry shake, use up the week.
+
+Dev mode doesn't use up the weekly play time.
 
 ## How a session works
 

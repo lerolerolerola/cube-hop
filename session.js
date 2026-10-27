@@ -17,7 +17,7 @@ const DEFAULTS = {
   photo: true, walk: true, steps: 20, calm: true, hum: true,
   red: true, orange: true, yellow: true, green: true, blue: true, purple: true,
   fade: true, sound: true, block: true, negative: true, invert: true, betray: true, freeze: true, starve: true,
-  shakeInvert: true,
+  shakeInvert: true, dev: false,
 };
 const FORM = [
   ['Time', { session: 'Play session (min)', breakEvery: 'Activity break every (min, 0 = never)', warn: 'Start winding down (min before end)', week: 'Play time per week (min)' }],
@@ -29,6 +29,7 @@ const FORM = [
     betray: 'Game ignores some jumps (after 1.5 min)', freeze: 'Screen freezes (after 2 min)', starve: 'Falling restarts the whole level',
   }],
   ['Frustration', { shakeInvert: 'Angry shaking swaps the controls until the child calms down' }],
+  ['Testing', { dev: '🛠 Dev mode: a button to try each mechanic right away' }],
 ];
 const COLORS = { red: [0, '#e63946'], orange: [28, '#f4a261'], yellow: [55, '#ffd84a'], green: [125, '#6fd17c'], blue: [215, '#4a90e2'], purple: [275, '#b28dff'] };
 
@@ -36,6 +37,7 @@ const COLORS = { red: [0, '#e63946'], orange: [28, '#f4a261'], yellow: [55, '#ff
 const get = (k, d) => { try { return JSON.parse(localStorage.getItem('cubehop.' + k)) ?? d; } catch { return d; } };
 const put = (k, v) => { try { localStorage.setItem('cubehop.' + k, JSON.stringify(v)); } catch {} };
 let S = { ...DEFAULTS, ...get('settings', {}) };
+if (/[?&]dev\b/.test(location.search)) S.dev = true; // or open the page with ?dev
 
 function weekId() { // the Monday of this week
   const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
@@ -78,6 +80,7 @@ function startSession(level, cubes) {
   $('notches').innerHTML = '';
   for (let m = S.breakEvery; S.breakEvery > 0 && m < S.session; m += S.breakEvery)
     $('notches').innerHTML += `<span style="left:${m / S.session * 100}%"></span>`;
+  $('devBtn').classList.toggle('hidden', !S.dev);
   $('title').classList.add('hidden'); $('hud').classList.remove('hidden'); $('pad').classList.remove('hidden');
   total = cubes; playing = true; closeModal();
   loadLevel(level);
@@ -86,7 +89,7 @@ function startSession(level, cubes) {
 function onTick() { // every 1/60 s while in a game, even when a card is open
   if (activityTick) activityTick();
   if (paused) return;
-  used += 1 / 60; week.used += 1 / 60;
+  used += 1 / 60; if (!S.dev) week.used += 1 / 60; // dev testing doesn't eat the weekly time
   if (t % 120 === 0) put('week', week);
   const l = left(), over = -l;
 
@@ -97,14 +100,15 @@ function onTick() { // every 1/60 s while in a game, even when a card is open
 
   // gradual fade before the end, harsher effects in overtime
   const fade = S.fade && S.warn > 0 ? Math.min(1, Math.max(0, 1 - l / (S.warn * 60))) : 0;
-  const filter = `grayscale(${fade.toFixed(2)})` + (S.negative && over > 30 ? ' invert(1)' : '');
+  const gray = devFx.gray ? 1 : fade;
+  const filter = `grayscale(${gray.toFixed(2)})` + (devFx.negative || (S.negative && over > 30) ? ' invert(1)' : '');
   if (filter !== lastFilter) cv.style.filter = lastFilter = filter;
-  fx.musicRate = S.sound ? 1 - 0.35 * fade : 1;
-  fx.offKey = S.sound && over > 0;
-  fx.inverted = (S.invert && over > 60) || t < invertUntil;
-  fx.betray = S.betray && over > 90;
-  fx.frozen = S.freeze && over > 120 && over < 126;
-  fx.starve = S.starve && over > 0;
+  fx.musicRate = devFx.music ? 0.65 : S.sound ? 1 - 0.35 * fade : 1;
+  fx.offKey = devFx.music || (S.sound && over > 0);
+  fx.inverted = devFx.invert || (S.invert && over > 60) || t < invertUntil;
+  fx.betray = devFx.betray || (S.betray && over > 90);
+  fx.frozen = t < devFreeze || (S.freeze && over > 120 && over < 126);
+  fx.starve = devFx.starve || (S.starve && over > 0);
 
   // frustration: hard shaking scrambles the controls; calming down fixes them
   angry = (keys.KeyE ? 25 : motion) > SHAKE_ANGRY ? angry + 1 : Math.max(0, angry - 1);
@@ -310,10 +314,39 @@ function hsl(r, g, b) { // → [hue 0-360, saturation 0-1, lightness 0-1]
   return [h * 60, d / (1 - Math.abs(2 * l - 1)), l];
 }
 
+// ---------- dev mode: try each friction mechanic on demand ----------
+const devFx = {};
+let devFreeze = 0;
+function devCard() {
+  const end = S.session * 60 + extra, clock = s => () => { used = s; closeModal(); }; // move the clock, the real rules react
+  const toggle = (k, label) => [(devFx[k] ? '✓ ' : '') + label, () => { devFx[k] = !devFx[k]; devCard(); }, devFx[k] ? '' : 'ghost'];
+  const angryShake = () => { closeModal(); invertUntil = t + 30 * 60; toast('Shaking scrambled the controls!\nTap 🧘 to calm down'); };
+  const lockWeek = () => { week.used = S.week * 60; put('week', week); endSession('This week is used up'); };
+  modal(`<h2>🛠 Dev mode</h2><p>Jump the clock: the real sequence plays<br>(it follows the grown-up settings)</p>`, [
+    ['☕ Break', () => { closeModal(); breakTime(); }],
+    ['⏩ Wind down', clock(end - S.warn * 60 + 1)],
+    ["⏰ Time's up", () => { timeUp = false; clock(end)(); }],
+    ...[30, 60, 90, 120, 150].map(s => [`+${s}s over`, () => { timeUp = true; hardStop = false; clock(end + s + 0.5)(); }]),
+    ['↺ Reset clock', () => { used = 0; warned = timeUp = hardStop = false; devFreeze = invertUntil = 0; for (const k in devFx) devFx[k] = false; closeModal(); }],
+  ]);
+  $('modal').querySelector('.btns').insertAdjacentHTML('afterend', '<p>Or switch one effect on by itself:</p><div class="btns" id="devToggles"></div>');
+  for (const [label, fn, cls] of [
+    toggle('gray', '🌫 Gray'), toggle('negative', '🔄 Negative'), toggle('music', '🎵 Music slow/off-key'),
+    toggle('invert', '🔀 Swap controls'), toggle('betray', '🙈 Ignore jumps'), toggle('starve', '⛔ No checkpoints'),
+    ['❄ Freeze 5 s', () => { devFreeze = t + 300; closeModal(); }, 'ghost'], ['😠 Angry shake', angryShake, 'ghost'],
+    ['🔒 Use up the week', lockWeek, 'ghost'], ['✕ Close', closeModal],
+  ]) {
+    const b = document.createElement('button');
+    b.textContent = label; b.className = cls || ''; b.onclick = fn;
+    $('devToggles').append(b);
+  }
+}
+
 // ---------- buttons ----------
 $('continue').onclick = () => { unlock(); const s = get('save', { lvl: 0, total: 0 }); startSession(s.lvl, s.total); };
 $('newGame').onclick = () => { unlock(); startSession(0, 0); };
 $('parents').onclick = () => grownUp(settingsCard, showTitle);
 $('pause').onclick = () => modal('<h2>⏸ Paused</h2>', [['▶ Resume', closeModal], ['🏁 Stop playing', () => endSession()]]);
+$('devBtn').onclick = devCard;
 $('calmBtn').onclick = () => calm(() => { invertUntil = 0; success('Controls are back to normal 😌'); }, closeModal);
 showTitle();
