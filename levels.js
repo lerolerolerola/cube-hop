@@ -1,10 +1,10 @@
 // Each level is 11 rows. Rows can be any length (they get padded).
-//  #  ground       B  brick         G  ghost block (solid while you shake)
-//  o  golden cube  ^  spikes        E  enemy        P  player start   D  door (exit)
+//  #  ground       B  brick         o  golden cube    ^  spikes
+//  E  enemy        F  checkpoint    P  player start   D  door (exit)
 const LEVELS = [
   {
     name: '1 · VILLAGE',
-    hint: 'TILT to walk · TAP to jump\n(PC: arrow keys + Space)',
+    hint: 'D-PAD to walk · A to jump',
     sky: ['#7fd6ff', '#ffe3f1'], cloud: '#ffffffcc', far: '#a9dcec',
     ground: '#d39b6a', grass: '#6fd17c', brick: '#e07a5f',
     map: [
@@ -16,33 +16,33 @@ const LEVELS = [
       '                 o o                         o o o                                         o o',
       '                BBBBB                       BBBBBBB         o                             ####',
       '                                                            ##                          ######',
-      '   P       o                o  E                        E   ##    E         o     E   ########              D',
+      '       P   o                o  E            F           E   ##    E         o     E   ########              D',
       '#####################   ##########   #################################   ##########################   ##########',
       '#####################   ##########   #################################   ##########################   ##########',
     ],
   },
   {
     name: '2 · SUNSET TOWERS',
-    hint: 'SHOUT to SUPER JUMP!\n(PC: Shift)',
+    hint: 'Hold B to RUN\nRunning jumps go higher!',
     sky: ['#ff9a8b', '#ffd88a'], cloud: '#ffffffaa', far: '#f0a39a',
     ground: '#9a6fb0', grass: '#ffb3c7', brick: '#5d4a8a',
     map: [
       '',
       '',
       '',
+      '',
       '                          o                          o                               o o o',
-      '                         ###                        ###                              #####',
       '                         ###                        ###                              #####',
       '            o o          ###                        ###          ^^^                 #####',
       '           BBBBB         ###                        ###        #######               #####',
-      '   P                     ###       E   E            ###        #######       E       #####           D',
+      '       P                 ###       E   E       F    ###        #######       E       #####           D',
       '############################################   ###########################################   #################',
       '############################################   ###########################################   #################',
     ],
   },
   {
     name: '3 · NIGHT RUINS',
-    hint: 'SHAKE the phone to make\nghost blocks solid!\n(PC: hold E)',
+    hint: 'Mind the gaps on\nthe brick bridges!',
     sky: ['#1b1f4b', '#3e6a8a'], cloud: '#ffffff22', far: '#2b3c6b', stars: true,
     ground: '#4a6b7c', grass: '#7fe0c2', brick: '#6c5a8e',
     map: [
@@ -52,10 +52,10 @@ const LEVELS = [
       '',
       '                                                     o',
       '                      o o o o                                  o o',
-      '                                                    ###       GGGGG',
+      '                                                    ###       BBBBB',
       '                                                    ###',
-      '   P                                    E           ###                          ^^^     E                   D',
-      '####################GGGGGGGGGGGG###############   ########GGGGGGGGGGGGGGGG######################GGGGGG#############',
+      '       P                                E           ###                     F    ^^^     E                   D',
+      '####################BBBB   BBBBB###############   ########BBBB   BBBB   BB######################BBBBBB#############',
       '####################            ###############   ########                ######################      #############',
     ],
   },

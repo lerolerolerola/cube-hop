@@ -1,13 +1,8 @@
-// Cube Hop: a tilt / shout / shake platformer. Plain canvas, no libraries.
-
-// ---- calibration knobs: tune these on real phones ----
-const TILT_DEADZONE = 4;   // degrees of tilt ignored around "neutral"
-const TILT_FULL = 18;      // degrees of tilt for full walking speed
-const MIC_LOUD = 0.2;      // mic volume (0..1) that counts as a shout
-const SHAKE_MIN = 8;       // m/s² of motion before it counts as shaking
+// Cube Hop: a mobile platformer with a D-pad and A/B buttons. Plain canvas, no libraries.
+// The phone's sensors are used by session.js (breaks and stopping play), not to steer.
 
 // ---- physics (pixels per frame at 60fps) ----
-const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, SUPER = 8.5, SPEED = 1.6;
+const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, WALK = 1.6, RUN = 2.4;
 const LIGHT = 'rgba(255,255,255,.3)', DARK = 'rgba(0,0,0,.18)', INK = '#1b1f4b';
 
 const $ = id => document.getElementById(id);
@@ -19,88 +14,103 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-// ---------- input: keyboard + touch ----------
-const keys = {};
+// effects that session.js switches on near/after the end of play time
+const fx = { inverted: false, betray: false, frozen: false, starve: false, musicRate: 1, offKey: false };
+
+// ---------- input: keyboard, D-pad, A/B ----------
+const keys = {}, pad = { l: false, r: false, run: false };
 let jumpBuf = 0;
+function pressJump() {
+  if (fx.betray && Math.random() < 0.4) return; // "betrayal": the game ignores some presses
+  jumpBuf = 8;
+}
 addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) { jumpBuf = 8; e.preventDefault(); }
+  if (['Space', 'ArrowUp', 'KeyW', 'KeyZ'].includes(e.code)) { if (!e.repeat) pressJump(); e.preventDefault(); }
 });
 addEventListener('keyup', e => keys[e.code] = false);
-cv.addEventListener('pointerdown', () => jumpBuf = 8);
 
-// ---------- sensors: tilt, shake, microphone ----------
-let tilt = 0, tiltZero = null, motion = 0, shake = 0, shakeNow = 0, vol = 0, analyser, wave;
-
-addEventListener('deviceorientation', e => {
-  // left/right tilt is a different axis depending on how the phone is rotated
-  const a = screen.orientation ? screen.orientation.angle : (window.orientation || 0);
-  const v = a === 90 ? e.beta : a === 270 || a === -90 ? -e.beta : a === 180 ? -e.gamma : e.gamma;
-  if (v == null) return;
-  if (tiltZero == null) tiltZero = v; // whatever angle you hold it at when you press PLAY = "standing still"
-  tilt = v - tiltZero;
-});
-
-addEventListener('devicemotion', e => {
-  const a = e.acceleration, g = e.accelerationIncludingGravity;
-  motion = a && a.x != null ? Math.hypot(a.x, a.y, a.z)
-    : g && g.x != null ? Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81) : 0;
-});
-
-function readMic() {
-  if (!analyser) return;
-  analyser.getFloatTimeDomainData(wave);
-  let s = 0;
-  for (const v of wave) s += v * v;
-  vol = Math.max(Math.sqrt(s / wave.length), vol * 0.9);
+const dp = $('dpad');
+function dpadAt(e) { // one touch area, so sliding a thumb from ◀ to ▶ works
+  const b = dp.getBoundingClientRect(), x = e.clientX - b.left - b.width / 2, y = e.clientY - b.top - b.height / 2;
+  const up = y < -b.height / 5;
+  if (up && !pad.u) pressJump();
+  pad.l = x < -b.width / 6; pad.r = x > b.width / 6; pad.u = up;
+  for (const k of ['l', 'r', 'u']) dp.querySelector('.' + k).classList.toggle('on', pad[k]);
 }
+dp.addEventListener('pointerdown', e => { try { dp.setPointerCapture(e.pointerId); } catch {} dpadAt(e); });
+dp.addEventListener('pointermove', e => dp.hasPointerCapture(e.pointerId) && dpadAt(e));
+for (const ev of ['pointerup', 'pointercancel'])
+  dp.addEventListener(ev, () => { pad.l = pad.r = pad.u = false; dp.querySelectorAll('b').forEach(b => b.classList.remove('on')); });
+$('bA').addEventListener('pointerdown', e => { e.preventDefault(); pressJump(); });
+$('bB').addEventListener('pointerdown', e => { e.preventDefault(); pad.run = true; });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('bB').addEventListener(ev, () => pad.run = false);
 
-$('start').onclick = () => {
-  // iPhone only gives sensors/mic if asked inside the tap, so everything starts here
-  window.DeviceOrientationEvent?.requestPermission?.().catch(() => {});
+// ---------- sound: tiny synth, no audio files ----------
+let ac, muted = false, note = 0, nextNote = 0;
+const SONG = [262, 330, 392, 330, 349, 440, 523, 440, 392, 330, 262, 330, 294, 349, 392, 0];
+
+function unlock() { // first tap: phones only allow sound/motion/fullscreen after a user gesture
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+  ac.resume();
   window.DeviceMotionEvent?.requestPermission?.().catch(() => {});
-  const ac = new (window.AudioContext || window.webkitAudioContext)();
-  navigator.mediaDevices?.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
-    .then(s => {
-      analyser = ac.createAnalyser(); analyser.fftSize = 512; wave = new Float32Array(512);
-      ac.createMediaStreamSource(s).connect(analyser); ac.resume();
-    })
-    .catch(() => {}); // no mic: Shift still super-jumps
   if (matchMedia('(pointer: coarse)').matches)
     document.documentElement.requestFullscreen?.().then(() => screen.orientation.lock?.('landscape')).catch(() => {});
   navigator.wakeLock?.request('screen').catch(() => {});
-  tiltZero = null;
-  $('title').classList.add('hidden');
-  restart();
-};
-$('again').onclick = () => { $('win').classList.add('hidden'); restart(); };
+}
+
+function sfx(f, d = 0.1, type = 'square', v = 0.06, detune = 0) {
+  if (!ac || muted) return;
+  const o = ac.createOscillator(), g = ac.createGain(), now = ac.currentTime;
+  o.type = type; o.frequency.value = f; o.detune.value = detune;
+  g.gain.setValueAtTime(v, now); g.gain.exponentialRampToValueAtTime(0.0001, now + d);
+  o.connect(g).connect(ac.destination); o.start(now); o.stop(now + d);
+}
+
+function music() { // slows and drops in pitch as play time winds down, goes off-key in overtime
+  if (!ac || muted || !playing || paused || fx.frozen || ac.currentTime < nextNote) return;
+  const f = SONG[note++ % SONG.length];
+  if (f) sfx(f * fx.musicRate, 0.22, 'triangle', 0.05, fx.offKey ? (Math.random() - 0.5) * 300 : 0);
+  nextNote = ac.currentTime + 0.22 / fx.musicRate;
+}
+
+$('mute').onclick = () => { muted = !muted; $('mute').textContent = muted ? '🔇' : '🔊'; };
 
 // ---------- game state ----------
-let lvl = 0, map, player, enemies, parts = [], total = 0, startTotal = 0, energy = 0, camX = 0, t = 0, dead = 0, state = 'title';
+let lvl = 0, map, player, enemies, parts = [], total = 0, startTotal = 0, camX = 0, t = 0, dead = 0, spawn;
+let playing = false, paused = false;
 
-function restart() { total = 0; state = 'play'; load(0); }
-
-function load(i) {
+function loadLevel(i) {
   lvl = i;
   const rows = LEVELS[i].map, w = Math.max(...rows.map(r => r.length));
   map = rows.map(r => r.padEnd(w).split(''));
-  enemies = []; parts = []; energy = 0; dead = 0; startTotal = total;
+  enemies = []; parts = []; startTotal = total;
   map.forEach((row, y) => row.forEach((c, x) => {
-    if (c === 'P') player = { x: x * T + 3, y: y * T + 2, w: 10, h: 14, vx: 0, vy: 0, face: 1, coyote: 0 };
+    if (c === 'P') spawn = { x: x * T + 3, y: y * T + 2 };
     if (c === 'E') enemies.push({ x: x * T + 2, y: y * T + 4, w: 12, h: 12, vx: 0, vy: 0, dir: -1 });
     if (c === 'P' || c === 'E') row[x] = ' ';
   }));
+  respawn();
   $('level').textContent = LEVELS[i].name;
+  if (playing) toast(LEVELS[i].hint);
+}
+
+function respawn() {
+  player = { x: spawn.x, y: spawn.y, w: 10, h: 14, vx: 0, vy: 0, face: 1, coyote: 0 };
+  dead = 0;
+}
+
+function toast(text) {
   const h = $('hint');
-  h.textContent = LEVELS[i].hint;
-  h.classList.remove('show'); void h.offsetWidth; if (state === 'play') h.classList.add('show');
+  h.textContent = text;
+  h.classList.remove('show'); void h.offsetWidth; h.classList.add('show');
 }
 
 function tile(x, y) {
   if (x < 0 || x >= map[0].length) return '#'; // invisible walls at the level edges
   return map[y]?.[x] ?? ' ';
 }
-const solid = c => c === '#' || c === 'B' || (c === 'G' && energy > 0);
+const solid = c => c === '#' || c === 'B';
 const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
 function cells(o) {
@@ -128,44 +138,40 @@ function burst(x, y, c, n) {
     parts.push({ x, y, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * 3, life: 30 + Math.random() * 20, c });
 }
 
-function die() { dead = 45; burst(player.x + 5, player.y + 7, '#fff', 20); }
-
-function next() {
-  if (lvl + 1 < LEVELS.length) return load(lvl + 1);
-  state = 'win';
-  $('score').textContent = `◆ ${total} cubes collected`;
-  $('win').classList.remove('hidden');
-}
+function die() { dead = 45; burst(player.x + 5, player.y + 7, '#fff', 20); sfx(196, 0.4, 'sawtooth'); }
 
 function update() {
-  readMic();
-  shake += (motion - shake) * 0.15;
-  shakeNow = keys.KeyE ? 25 : shake;
-  const shout = vol > MIC_LOUD || keys.ShiftLeft || keys.ShiftRight;
-  energy = Math.min(1, Math.max(0, energy + Math.max(0, shakeNow - SHAKE_MIN) * 0.004 - 0.003));
   parts = parts.filter(q => (q.x += q.vx, q.y += q.vy, q.vy += 0.15, --q.life > 0));
-  if (dead) { if (--dead === 0) { total = startTotal; load(lvl); } return; }
+  if (dead) {
+    if (--dead === 0) {
+      if (fx.starve) { total = startTotal; loadLevel(lvl); toast('Back to the start of the level!'); } // checkpoint starvation
+      else respawn();
+    }
+    return;
+  }
 
   const p = player;
-  let dir = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
-  if (!dir && Math.abs(tilt) > TILT_DEADZONE)
-    dir = Math.max(-1, Math.min(1, (tilt - Math.sign(tilt) * TILT_DEADZONE) / (TILT_FULL - TILT_DEADZONE)));
-  if (dir) p.face = Math.sign(dir);
-  p.vx += (dir * SPEED - p.vx) * (p.ground ? 0.25 : 0.12);
+  let dir = (keys.ArrowRight || keys.KeyD || pad.r ? 1 : 0) - (keys.ArrowLeft || keys.KeyA || pad.l ? 1 : 0);
+  if (fx.inverted) dir = -dir;
+  const run = pad.run || keys.ShiftLeft || keys.ShiftRight || keys.KeyX;
+  if (dir) p.face = dir;
+  p.vx += (dir * (run ? RUN : WALK) - p.vx) * (p.ground ? 0.25 : 0.12);
   p.vy = Math.min(p.vy + GRAV, 7);
   p.coyote = p.ground ? 6 : p.coyote - 1; // can still jump a few frames after walking off a ledge
-  if (p.coyote > 0 && (jumpBuf > 0 || shout)) {
-    p.vy = shout ? -SUPER : -JUMP; p.coyote = 0; jumpBuf = 0;
-    burst(p.x + 5, p.y + 14, shout ? '#ffd84a' : '#fff', shout ? 14 : 5);
+  if (p.coyote > 0 && jumpBuf > 0) {
+    p.vy = -(JUMP + Math.max(0, Math.abs(p.vx) - WALK) * 1.2); // running jumps go higher
+    p.coyote = 0; jumpBuf = 0;
+    burst(p.x + 5, p.y + 14, '#fff', 5); sfx(520, 0.12);
   }
   jumpBuf--;
   move(p);
 
   for (const [x, y] of cells(p)) {
     const c = tile(x, y);
-    if (c === 'o') { map[y][x] = ' '; total++; burst(x * T + 8, y * T + 8, '#ffd84a', 10); }
+    if (c === 'o') { map[y][x] = ' '; total++; burst(x * T + 8, y * T + 8, '#ffd84a', 10); sfx(988, 0.08); sfx(1319, 0.15); }
+    if (c === 'F') { map[y][x] = 'f'; spawn = { x: x * T + 3, y: y * T + 2 }; sfx(660, 0.1); sfx(880, 0.2); toast('Checkpoint!'); }
     if (c === '^' && p.y + p.h > y * T + 9) return die();
-    if (c === 'D') return next();
+    if (c === 'D') { sfx(523, 0.1); sfx(784, 0.3); return onLevelDone(); }
   }
   if (p.y > H + 16) return die();
 
@@ -175,7 +181,7 @@ function update() {
     if (e.wall || (e.ground && !solid(ahead))) e.dir *= -1;
     if (e.y > H + 16) e.dead = true;
     if (!e.dead && hit(p, e)) {
-      if (p.vy > 0 && p.y + p.h - e.y < 8) { e.dead = true; p.vy = -4.5; burst(e.x + 6, e.y + 6, '#b28dff', 12); }
+      if (p.vy > 0 && p.y + p.h - e.y < 8) { e.dead = true; p.vy = -4.5; burst(e.x + 6, e.y + 6, '#b28dff', 12); sfx(330, 0.1); }
       else return die();
     }
   }
@@ -204,18 +210,14 @@ function drawTile(L, c, x, y) {
     rect(X, Y, T, T, L.brick); rect(X, Y, T, 1, LIGHT);
     rect(X, Y + 7, T, 1, DARK); rect(X, Y + 15, T, 1, DARK);
     rect(X + 7, Y, 1, 7, DARK); rect(X + 3, Y + 8, 1, 7, DARK); rect(X + 11, Y + 8, 1, 7, DARK);
-  } else if (c === 'G') {
-    if (energy > 0 && (energy > 0.2 || t % 10 < 6)) { // flickers when energy is running out
-      rect(X, Y, T, T, '#b28dff'); rect(X, Y, T, 2, LIGHT); rect(X + 4, Y + 5, 8, 6, LIGHT);
-    } else {
-      ctx.strokeStyle = '#b28dff'; ctx.setLineDash([2, 2]);
-      ctx.strokeRect(X + 0.5, Y + 0.5, T - 1, T - 1); ctx.setLineDash([]);
-    }
   } else if (c === '^') {
     for (let i = 0; i < 4; i++) {
       rect(X + i * 4 + 1, Y + 8, 2, 8, '#e8ecf5'); rect(X + i * 4, Y + 12, 4, 4, '#e8ecf5');
       rect(X + i * 4 + 2, Y + 9, 1, 7, DARK);
     }
+  } else if (c === 'F' || c === 'f') { // checkpoint flag, lights up once touched
+    rect(X + 7, Y + 1, 2, 15, '#ece3d0');
+    rect(X + 9, Y + 2, 6, 5, c === 'f' ? '#ffd84a' : '#8a8fb0');
   } else if (c === 'o') { // spinning golden cube
     const cy = Y + 4 + Math.round(Math.sin(t * 0.08 + x) * 2), lw = Math.round(4 + 3.5 * Math.sin(t * 0.06 + x));
     rect(X + 4, cy, 8, 3, '#fff3a6');
@@ -277,20 +279,16 @@ function draw() {
   ctx.restore();
 }
 
-function hud() {
-  $('cubes').textContent = '◆ ' + total;
-  $('mMic').style.width = Math.min(100, vol / MIC_LOUD * 100) + '%';
-  $('mShake').style.width = Math.min(100, shakeNow / 30 * 100) + '%';
-  $('mEnergy').style.width = energy * 100 + '%';
-}
-
 // fixed 60 updates/sec so 120Hz phones don't run double speed
 let last = performance.now(), acc = 0;
 function frame(now) {
   acc += Math.min(now - last, 100); last = now;
-  for (; acc >= 1000 / 60; acc -= 1000 / 60) { t++; if (state === 'play') update(); }
-  draw(); hud();
+  for (; acc >= 1000 / 60; acc -= 1000 / 60) {
+    t++;
+    if (playing) { onTick(); if (!paused && !fx.frozen) update(); }
+  }
+  draw(); music();
   requestAnimationFrame(frame);
 }
-load(0);
+loadLevel(0);
 requestAnimationFrame(frame);

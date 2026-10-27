@@ -13,33 +13,39 @@
 <body>
 <canvas id="game"></canvas>
 
-<div id="hud">
+<div id="hud" class="hidden">
+  <button id="pause" class="icon" aria-label="Pause">⏸</button>
   <span id="cubes">◆ 0</span>
   <span id="level"></span>
-  <div class="meters">
-    <label title="Microphone">🎤<i><b id="mMic"></b></i></label>
-    <label title="Shake speed">📳<i><b id="mShake"></b></i></label>
-    <label title="Ghost energy">✨<i><b id="mEnergy"></b></i></label>
-  </div>
+  <div id="time"><i id="timeBar"><b id="timeFill"></b><span id="notches"></span></i><span id="clock"></span></div>
+  <button id="calmBtn" class="icon hidden" aria-label="Calm down">🧘</button>
+  <button id="mute" class="icon" aria-label="Sound">🔊</button>
 </div>
+
+<div id="pad" class="hidden">
+  <div id="dpad"><b class="u">▲</b><b class="l">◀</b><i></i><b class="r">▶</b><b class="d">▼</b></div>
+  <div id="ab"><button id="bB">B</button><button id="bA">A</button></div>
+</div>
+
 <div id="hint"></div>
 
 <div id="title" class="screen">
   <h1>CUBE<br>HOP</h1>
-  <button id="start">PLAY</button>
-  <p>📱 Tilt = walk · Tap = jump<br>🗣️ Shout = super jump · 📳 Shake = ghost blocks</p>
-  <p class="pc">💻 Arrows walk · Space jump · Shift super jump · hold E = shake</p>
+  <p id="weekInfo"></p>
+  <div class="btns">
+    <button id="continue">▶ CONTINUE</button>
+    <button id="newGame">NEW GAME</button>
+  </div>
+  <p class="pc">💻 Arrows walk · Space jump · Shift run · hold E = angry shake</p>
+  <button id="parents" class="ghost">⚙ Grown-ups</button>
 </div>
 
-<div id="win" class="screen hidden">
-  <h1>YOU<br>WIN!</h1>
-  <p id="score"></p>
-  <button id="again">PLAY AGAIN</button>
-</div>
+<div id="modal" class="screen hidden"></div>
 
 <div id="rotate" class="screen">↻<p>Turn your phone sideways</p></div>
 
 <script src="levels.js"></script>
 <script src="game.js"></script>
+<script src="session.js"></script>
 </body>
 </html>

@@ -1,49 +1,74 @@
 # Cube Hop
 
-A pixel-art platformer for phones that you control with your body:
+A pixel-art platformer for phones, built to explore **designing for disengagement**: helping children stop playing in a healthy way.
 
-| Phone | PC (for testing) | What it does |
+The game plays like a normal mobile game (D-pad + A/B buttons). The phone's sensors are not controls. They are tools for taking breaks and ending a session.
+
+## Controls
+
+| Phone | PC (testing) | |
 |---|---|---|
-| Tilt left/right | Arrow keys / A D | Walk |
-| Tap the screen | Space / W / ↑ | Jump |
-| Shout / clap | Shift | Super jump |
-| Shake the phone | Hold E | Ghost blocks turn solid (faster shaking = fills faster) |
+| D-pad ◀ ▶ | Arrow keys / A D | Walk |
+| A (or D-pad ▲) | Space / W / ↑ | Jump |
+| Hold B | Shift / X | Run (running jumps go higher) |
+| Shake hard | Hold E | Simulates an "angry shake" |
 
-Three levels: **Village** (walk + jump), **Sunset Towers** (shout), **Night Ruins** (shake).
+## How a session works
+
+| Principle | In the game |
+|---|---|
+| **Autonomy** | ⏸ → "Stop playing" at any time; the child picks the break activity; "I'm done for today" on every break; "Stop here" after every level |
+| **Gradual transition** | A warning before the end; colors fade to gray and the music slows down |
+| **Satisfying ending** | When time runs out the child can finish the current level, then gets an ending card |
+| **Continuity** | Progress is saved (resumes at the start of the level) |
+| **Social context** | A grown-up panel (behind a math question) sets the times, activities and effects; the ending card says "tell a grown-up what you did" |
+| **No manipulation** | No rewards for staying, no streaks, no timers that pull the child back |
+
+**Activity breaks** (every N minutes, shown as marks on the time bar): the sensors as tools
+- 📷 **Camera:** "find something RED" (point the camera, fill the square, press SNAP)
+- 🚶 **Steps:** walk N steps holding the phone
+- 🧘 **Motion sensor:** hold the phone still and breathe
+- 🎤 **Microphone:** hum a song for 3 seconds
+
+**Frustration:** shaking the phone angrily swaps left and right. A 🧘 button appears, and calming down (holding the phone still) fixes the controls.
+
+**If the child keeps playing after time is up** (each one can be turned off by a grown-up):
+time's-up pop-up → negative colors (30 s) → controls swap (1 min) → game ignores some jumps (1.5 min) → screen freezes (2 min) → final stop pop-up (2.5 min). Music goes off-key, and falling restarts the whole level (no checkpoints).
+
+**Weekly time:** play time is counted per week. When it's used up, the game is locked until Monday (a grown-up can reset it).
+
+Everything is saved on the device only (localStorage). Nothing is sent anywhere.
 
 ## Test on your computer
 
-Sensors and the microphone only work from `localhost` or `https`, so don't just double-click `index.html`. Run a tiny server in this folder instead:
+The camera, microphone and motion sensors only work from `localhost` or `https`. Run this in the game folder:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then open http://localhost:8000
+Then open http://localhost:8000. On PC, activity cards have a **Skip (PC test)** button. Tip: in ⚙ Grown-ups, set the session to 1 minute and breaks to 0.5 to see everything quickly.
 
-## Put it on GitHub (and play it on your phone)
+## Publish changes to GitHub Pages
 
-1. Create a new repository on github.com (for example `cube-hop`), public.
-2. Upload these files: `index.html`, `style.css`, `levels.js`, `game.js`, `README.md`
-   (on the repo page: **Add file → Upload files**, drag them in, **Commit**).
-3. Go to **Settings → Pages**, under "Branch" pick `main` and `/ (root)`, then **Save**.
-4. After about a minute the game is live at `https://YOUR-USERNAME.github.io/cube-hop/`.
-   Open that on the phone, turn it sideways, press PLAY and allow motion + microphone.
-
-## Make your own levels
-
-Edit `levels.js`. Each level is 11 rows of text:
-
+```bash
+git add -A
+git commit -m "update"
+git push
 ```
-#  ground     B  brick      G  ghost block (solid while shaking)
-o  cube       ^  spikes     E  enemy
-P  start      D  door (exit)
-```
+
+Live at https://lerolerolerola.github.io/cube-hop/ about a minute later.
+
+## Files
+
+- `game.js`: the platformer (controls, physics, drawing, sound)
+- `session.js`: time limits, breaks, activities, end-of-play effects, grown-up settings
+- `levels.js`: the levels as text, easy to edit:
+  ```
+  #  ground     B  brick       o  cube        ^  spikes
+  E  enemy      F  checkpoint  P  start       D  door (exit)
+  ```
 
 ## Tuning for real phones
 
-Top of `game.js`:
-
-- `TILT_DEADZONE` / `TILT_FULL`: how much tilt before walking / for full speed
-- `MIC_LOUD`: how loud a shout must be (watch the 🎤 bar: full = super jump)
-- `SHAKE_MIN`: how hard you must shake before it counts
+Top of `session.js`: `SHAKE_ANGRY` (how hard a frustrated shake is), `STILL` (how still counts as calm), `HUM_LEVEL` (how loud humming must be), `CALM_SECONDS`, `HUM_SECONDS`.

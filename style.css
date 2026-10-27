@@ -19,31 +19,77 @@ canvas {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+  transition: filter 1s;
 }
 
+button {
+  font: inherit;
+  font-size: 12px;
+  padding: 12px 18px;
+  border: 0;
+  background: #ffd84a;
+  color: #1b1f4b;
+  box-shadow: 0 5px 0 #c9971f;
+  cursor: pointer;
+}
+button:active { transform: translateY(3px); box-shadow: 0 2px 0 #c9971f; }
+button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px #fff; }
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
 #hud {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
-  font-size: 12px;
+  gap: 12px;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  font-size: 10px;
   text-shadow: 2px 2px 0 #0006;
   pointer-events: none;
 }
+#hud button { pointer-events: auto; }
+.icon { font-family: system-ui, sans-serif; font-size: 16px; padding: 4px 8px; background: #1b1f4b88; color: #fff; box-shadow: none; }
 #cubes { color: #ffd84a; }
-.meters { margin-left: auto; display: flex; gap: 10px; }
-.meters i { display: inline-block; width: 48px; height: 10px; margin-left: 4px; border: 2px solid #fff; background: #0004; vertical-align: middle; }
-.meters b { display: block; height: 100%; width: 0; background: #ffd84a; }
-#mShake { background: #7fe0c2; }
-#mEnergy { background: #b28dff; }
+#time { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+#timeBar { position: relative; display: block; width: 120px; height: 12px; border: 2px solid #fff; background: #0004; }
+#timeFill { display: block; height: 100%; width: 0; background: #ffd84a; }
+#notches span { position: absolute; top: -5px; bottom: -5px; width: 2px; background: #7fe0c2; } /* activity breaks */
 
+/* ---------- D-pad and A/B ---------- */
+#pad {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 max(24px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+#dpad {
+  pointer-events: auto;
+  display: grid;
+  grid-template: repeat(3, 44px) / repeat(3, 44px);
+  font-family: system-ui, sans-serif;
+  opacity: .85;
+}
+#dpad b, #dpad i { display: flex; align-items: center; justify-content: center; background: #1b1f4bcc; color: #fff; font-size: 16px; }
+#dpad .u { grid-area: 1 / 2; border-radius: 8px 8px 0 0; }
+#dpad .l { grid-area: 2 / 1; border-radius: 8px 0 0 8px; }
+#dpad i  { grid-area: 2 / 2; }
+#dpad .r { grid-area: 2 / 3; border-radius: 0 8px 8px 0; }
+#dpad .d { grid-area: 3 / 2; border-radius: 0 0 8px 8px; }
+#dpad b.on { background: #ffd84a; color: #1b1f4b; }
+#ab { pointer-events: auto; display: flex; gap: 16px; align-items: flex-end; opacity: .9; }
+#ab button { width: 64px; height: 64px; border-radius: 50%; padding: 0; font-size: 18px; }
+#bA { background: #e63946; color: #fff; box-shadow: 0 5px 0 #a4202b; margin-bottom: 28px; }
+
+/* ---------- messages ---------- */
 #hint {
   position: fixed;
-  top: 30%; left: 0; right: 0;
+  top: 28%; left: 0; right: 0;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 2;
   white-space: pre-line;
   text-shadow: 3px 3px 0 #1b1f4b;
@@ -56,32 +102,61 @@ canvas {
 .screen {
   position: fixed;
   inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  padding: 20px;
+  gap: 18px;
+  padding: 16px;
   text-align: center;
   background: #1b1f4b99;
 }
-.screen p { font-size: 10px; line-height: 2.2; }
+.screen p { font-size: 10px; line-height: 2; }
+#modal { z-index: 8; }
 h1 { font-size: 44px; line-height: 1.2; color: #ffd84a; text-shadow: 4px 4px 0 #e63946; }
+h2 { font-size: 14px; line-height: 1.8; color: #ffd84a; }
+h3 { font-size: 10px; color: #7fe0c2; align-self: flex-start; margin-top: 8px; }
+.btns { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
 
-button {
-  font: inherit;
-  font-size: 16px;
-  padding: 14px 28px;
-  border: 0;
-  background: #ffd84a;
-  color: #1b1f4b;
-  box-shadow: 0 6px 0 #c9971f;
-  cursor: pointer;
+.card {
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  overflow: auto;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: #1b1f4b;
+  border: 4px solid #fff;
+  box-shadow: 8px 8px 0 #0006;
 }
-button:active { transform: translateY(4px); box-shadow: 0 2px 0 #c9971f; }
+.row { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 9px; line-height: 1.6; text-align: left; cursor: pointer; }
+.row input[type=checkbox] { flex: none; width: 20px; height: 20px; accent-color: #ffd84a; }
+.row input[type=number], #gate { margin-left: auto; width: 80px; font: inherit; font-size: 12px; padding: 6px; text-align: center; }
+#gate { margin: 0; width: 120px; font-size: 18px; user-select: text; -webkit-user-select: text; }
 
-.hidden { display: none !important; }
+/* ---------- activities ---------- */
+.bar { display: block; width: 100%; max-width: 320px; height: 16px; border: 3px solid #fff; }
+.bar b { display: block; height: 100%; width: 0; background: #7fe0c2; }
+.big { font-size: 26px !important; }
+.breathe { width: 60px; height: 60px; margin: 24px; border-radius: 50%; background: #7fe0c2; animation: breathe 8s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.8); opacity: .6; } }
+.cam { position: relative; width: min(320px, 60vh); aspect-ratio: 4 / 3; overflow: hidden; border: 3px solid #fff; background: #000; }
+.cam video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cam::after { /* the square that gets checked for the color */
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 37.5%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 3px dashed #fff;
+}
 
 #rotate { display: none; z-index: 10; font-size: 48px; background: #1b1f4b; }
 @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
-@media (pointer: coarse) { .pc { display: none; } }
+@media (pointer: coarse) { .pc { display: none !important; } }
