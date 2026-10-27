@@ -237,6 +237,7 @@ function showTitle() {
   $('weekInfo').textContent = wl > 0 ? `Play time left this week: ${Math.ceil(wl / 60)} min` : "This week's play time is used up. It comes back on Monday! 🌙";
   $('continue').classList.toggle('hidden', !save || wl <= 0);
   $('newGame').classList.toggle('hidden', wl <= 0);
+  $('resetWeek').classList.toggle('hidden', wl > 0);
 }
 
 // ---------- activities ----------
@@ -346,6 +347,10 @@ function devCard() {
 $('continue').onclick = () => { unlock(); const s = get('save', { lvl: 0, total: 0 }); startSession(s.lvl, s.total); };
 $('newGame').onclick = () => { unlock(); startSession(0, 0); };
 $('parents').onclick = () => grownUp(settingsCard, showTitle);
+$('resetWeek').onclick = () => { // for testing; behind the grown-up question unless dev mode is on
+  const reset = () => { week.used = 0; put('week', week); showTitle(); };
+  S.dev ? reset() : grownUp(reset, showTitle);
+};
 $('pause').onclick = () => modal('<h2>⏸ Paused</h2>', [['▶ Resume', closeModal], ['🏁 Stop playing', () => endSession()]]);
 $('devBtn').onclick = devCard;
 $('calmBtn').onclick = () => calm(() => { invertUntil = 0; success('Controls are back to normal 😌'); }, closeModal);
