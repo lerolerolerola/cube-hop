@@ -10,7 +10,7 @@ The game plays like a normal mobile game (D-pad + A/B buttons). The phone's sens
 |---|---|---|
 | D-pad ◀ ▶ | Arrow keys / A D | Walk |
 | A (or D-pad ▲) | Space / W / ↑ | Jump |
-| Hold B | Shift / X | Run (running jumps go higher) |
+| B | Shift / X | Dash (one per jump, knocks out enemies) |
 | Shake hard | Hold E | Simulates an "angry shake" |
 
 ## How a session works

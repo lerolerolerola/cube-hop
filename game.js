@@ -2,7 +2,7 @@
 // The phone's sensors are used by session.js (breaks and stopping play), not to steer.
 
 // ---- physics (pixels per frame at 60fps) ----
-const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, WALK = 1.6, RUN = 2.4;
+const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, WALK = 1.6, DASH = 4.5;
 const LIGHT = 'rgba(255,255,255,.3)', DARK = 'rgba(0,0,0,.18)', INK = '#1b1f4b';
 
 const $ = id => document.getElementById(id);
@@ -18,15 +18,20 @@ addEventListener('resize', resize); resize();
 const fx = { inverted: false, betray: false, frozen: false, starve: false, musicRate: 1, offKey: false };
 
 // ---------- input: keyboard, D-pad, A/B ----------
-const keys = {}, pad = { l: false, r: false, run: false };
-let jumpBuf = 0;
+const keys = {}, pad = { l: false, r: false };
+let jumpBuf = 0, dashBuf = 0;
 function pressJump() {
   if (fx.betray && Math.random() < 0.4) return; // "betrayal": the game ignores some presses
   jumpBuf = 8;
 }
+function pressDash() {
+  if (fx.betray && Math.random() < 0.4) return;
+  dashBuf = 6;
+}
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['Space', 'ArrowUp', 'KeyW', 'KeyZ'].includes(e.code)) { if (!e.repeat) pressJump(); e.preventDefault(); }
+  if (['ShiftLeft', 'ShiftRight', 'KeyX'].includes(e.code) && !e.repeat) pressDash();
 });
 addEventListener('keyup', e => keys[e.code] = false);
 
@@ -43,8 +48,7 @@ dp.addEventListener('pointermove', e => dp.hasPointerCapture(e.pointerId) && dpa
 for (const ev of ['pointerup', 'pointercancel'])
   dp.addEventListener(ev, () => { pad.l = pad.r = pad.u = false; dp.querySelectorAll('b').forEach(b => b.classList.remove('on')); });
 $('bA').addEventListener('pointerdown', e => { e.preventDefault(); pressJump(); });
-$('bB').addEventListener('pointerdown', e => { e.preventDefault(); pad.run = true; });
-for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('bB').addEventListener(ev, () => pad.run = false);
+$('bB').addEventListener('pointerdown', e => { e.preventDefault(); pressDash(); });
 
 // ---------- sound: tiny synth, no audio files ----------
 let ac, muted = false, note = 0, nextNote = 0;
@@ -153,13 +157,20 @@ function update() {
   const p = player;
   let dir = (keys.ArrowRight || keys.KeyD || pad.r ? 1 : 0) - (keys.ArrowLeft || keys.KeyA || pad.l ? 1 : 0);
   if (fx.inverted) dir = -dir;
-  const run = pad.run || keys.ShiftLeft || keys.ShiftRight || keys.KeyX;
   if (dir) p.face = dir;
-  p.vx += (dir * (run ? RUN : WALK) - p.vx) * (p.ground ? 0.25 : 0.12);
-  p.vy = Math.min(p.vy + GRAV, 7);
+  if (p.ground) p.canDash = true; // one dash, then touch the ground to recharge it
+  if (dashBuf > 0 && p.canDash && !p.dash) { p.dash = 12; p.canDash = false; dashBuf = 0; sfx(260, 0.15, 'sawtooth'); }
+  dashBuf--;
+  if (p.dash) { // dash: a straight burst in the facing direction, no gravity
+    p.dash--; p.vx = p.face * DASH; p.vy = 0;
+    if (t % 2) parts.push({ x: p.x + 5, y: p.y + 4 + Math.random() * 8, vx: 0, vy: 0, life: 12, c: '#ffffffaa' });
+  } else {
+    p.vx += (dir * WALK - p.vx) * (p.ground ? 0.25 : 0.12);
+    p.vy = Math.min(p.vy + GRAV, 7);
+  }
   p.coyote = p.ground ? 6 : p.coyote - 1; // can still jump a few frames after walking off a ledge
   if (p.coyote > 0 && jumpBuf > 0) {
-    p.vy = -(JUMP + Math.max(0, Math.abs(p.vx) - WALK) * 1.2); // running jumps go higher
+    p.vy = -JUMP; p.dash = 0;
     p.coyote = 0; jumpBuf = 0;
     burst(p.x + 5, p.y + 14, '#fff', 5); sfx(520, 0.12);
   }
@@ -181,7 +192,9 @@ function update() {
     if (e.wall || (e.ground && !solid(ahead))) e.dir *= -1;
     if (e.y > H + 16) e.dead = true;
     if (!e.dead && hit(p, e)) {
-      if (p.vy > 0 && p.y + p.h - e.y < 8) { e.dead = true; p.vy = -4.5; burst(e.x + 6, e.y + 6, '#b28dff', 12); sfx(330, 0.1); }
+      if (p.dash || (p.vy > 0 && p.y + p.h - e.y < 8)) { // dash into it, or stomp it
+        e.dead = true; if (!p.dash) p.vy = -4.5; burst(e.x + 6, e.y + 6, '#b28dff', 12); sfx(330, 0.1);
+      }
       else return die();
     }
   }
