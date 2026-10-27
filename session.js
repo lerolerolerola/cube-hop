@@ -200,10 +200,10 @@ function endSession(msg = 'Great playing!', saved = false) {
   playing = false;
 }
 
-function grownUp(then, back) { // simple parent gate
+function grownUp(then, back, note = '') { // simple parent gate
   const a = 6 + pick([0, 1, 2, 3, 4, 5, 6]), b = 3 + pick([0, 1, 2, 3, 4, 5, 6]);
-  modal(`<h2>For grown-ups</h2><p>What is ${a} × ${b}?</p><input id="gate" type="number" inputmode="numeric">`, [
-    ['OK', () => (+$('gate').value === a * b ? then() : back())],
+  modal(`<h2>For grown-ups</h2>${note}<p>What is ${a} × ${b}?</p><input id="gate" type="number" inputmode="numeric">`, [
+    ['OK', () => (+$('gate').value === a * b ? then() : grownUp(then, back, '<p>Not quite, try again!</p>'))],
     ['Cancel', back, 'ghost'],
   ]);
   $('gate').focus();
