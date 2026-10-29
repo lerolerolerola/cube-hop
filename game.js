@@ -1,7 +1,3 @@
-// Cube Hop: a mobile platformer with a D-pad and A/B buttons. Plain canvas, no libraries.
-// The phone's sensors are used by session.js (breaks and stopping play), not to steer.
-
-// ---- physics (pixels per frame at 60fps) ----
 const T = 16, H = 176, GRAV = 0.3, JUMP = 5.6, DOUBLE = 5, WALK = 1.6, DASH = 4.5;
 const LIGHT = 'rgba(255,255,255,.3)', DARK = 'rgba(0,0,0,.18)', INK = '#1b1f4b';
 
@@ -14,14 +10,12 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-// effects that session.js switches on near/after the end of play time
 const fx = { inverted: false, betray: false, frozen: false, starve: false, musicRate: 1, offKey: false };
 
-// ---------- input: keyboard, D-pad, A/B ----------
 const keys = {}, pad = { l: false, r: false };
 let jumpBuf = 0, dashBuf = 0;
 function pressJump() {
-  if (fx.betray && Math.random() < 0.4) return; // "betrayal": the game ignores some presses
+  if (fx.betray && Math.random() < 0.4) return;
   jumpBuf = 8;
 }
 function pressDash() {
@@ -36,7 +30,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys[e.code] = false);
 
 const dp = $('dpad');
-function dpadAt(e) { // one touch area, so sliding a thumb from ◀ to ▶ works
+function dpadAt(e) {
   const b = dp.getBoundingClientRect(), x = e.clientX - b.left - b.width / 2, y = e.clientY - b.top - b.height / 2;
   const up = y < -b.height / 5;
   if (up && !pad.u) pressJump();
@@ -50,11 +44,10 @@ for (const ev of ['pointerup', 'pointercancel'])
 $('bA').addEventListener('pointerdown', e => { e.preventDefault(); pressJump(); });
 $('bB').addEventListener('pointerdown', e => { e.preventDefault(); pressDash(); });
 
-// ---------- sound: tiny synth, no audio files ----------
 let ac, muted = false, note = 0, nextNote = 0;
 const SONG = [262, 330, 392, 330, 349, 440, 523, 440, 392, 330, 262, 330, 294, 349, 392, 0];
 
-function unlock() { // first tap: phones only allow sound/motion/fullscreen after a user gesture
+function unlock() {
   ac = ac || new (window.AudioContext || window.webkitAudioContext)();
   ac.resume();
   window.DeviceMotionEvent?.requestPermission?.().catch(() => {});
@@ -71,7 +64,7 @@ function sfx(f, d = 0.1, type = 'square', v = 0.06, detune = 0) {
   o.connect(g).connect(ac.destination); o.start(now); o.stop(now + d);
 }
 
-function music() { // slows and drops in pitch as play time winds down, goes off-key in overtime
+function music() {
   if (!ac || muted || !playing || paused || fx.frozen || ac.currentTime < nextNote) return;
   const f = SONG[note++ % SONG.length];
   if (f) sfx(f * fx.musicRate, 0.22, 'triangle', 0.05, fx.offKey ? (Math.random() - 0.5) * 300 : 0);
@@ -80,7 +73,6 @@ function music() { // slows and drops in pitch as play time winds down, goes off
 
 onPress($('mute'), () => { muted = !muted; $('mute').textContent = muted ? '🔇' : '🔊'; });
 
-// ---------- game state ----------
 let lvl = 0, map, player, enemies, parts = [], total = 0, startTotal = 0, camX = 0, t = 0, dead = 0, spawn;
 let playing = false, paused = false;
 
@@ -104,15 +96,13 @@ function respawn() {
   dead = 0;
 }
 
-// Buttons act when the finger lifts: some phones stop sending clicks on a no-scroll page.
-// A press must start on the button; click still works for keyboards and tests (detail 0).
 function onPress(el, fn) {
   el.onpointerdown = () => el.armed = true;
   el.onpointerup = e => el.armed && (el.armed = false, fn(e));
   el.onclick = e => e.detail === 0 && fn(e);
 }
 
-addEventListener('error', e => toast('⚠ ' + e.message)); // show errors on the phone screen while testing
+addEventListener('error', e => toast('⚠ ' + e.message));
 
 function toast(text) {
   const h = $('hint');
@@ -121,7 +111,7 @@ function toast(text) {
 }
 
 function tile(x, y) {
-  if (x < 0 || x >= map[0].length) return '#'; // invisible walls at the level edges
+  if (x < 0 || x >= map[0].length) return '#';
   return map[y]?.[x] ?? ' ';
 }
 const solid = c => c === '#' || c === 'B';
@@ -135,7 +125,6 @@ function cells(o) {
 }
 const hits = o => cells(o).some(([x, y]) => solid(tile(x, y)));
 
-// move on x, push out of walls, then y, push out of floor/ceiling
 function move(o) {
   o.x += o.vx; o.wall = hits(o);
   if (o.wall) { o.x = o.vx > 0 ? Math.floor((o.x + o.w) / T) * T - o.w - 0.01 : (Math.floor(o.x / T) + 1) * T; o.vx = 0; }
@@ -158,7 +147,7 @@ function update() {
   parts = parts.filter(q => (q.x += q.vx, q.y += q.vy, q.vy += 0.15, --q.life > 0));
   if (dead) {
     if (--dead === 0) {
-      if (fx.starve) { total = startTotal; loadLevel(lvl); toast('Back to the start of the level!'); } // checkpoint starvation
+      if (fx.starve) { total = startTotal; loadLevel(lvl); toast('Back to the start of the level!'); }
       else respawn();
     }
     return;
@@ -168,19 +157,19 @@ function update() {
   let dir = (keys.ArrowRight || keys.KeyD || pad.r ? 1 : 0) - (keys.ArrowLeft || keys.KeyA || pad.l ? 1 : 0);
   if (fx.inverted) dir = -dir;
   if (dir) p.face = dir;
-  if (p.ground) p.canDash = true; // one dash, then touch the ground to recharge it
+  if (p.ground) p.canDash = true;
   if (dashBuf > 0 && p.canDash && !p.dash) { p.dash = 12; p.canDash = false; dashBuf = 0; sfx(260, 0.15, 'sawtooth'); }
   dashBuf--;
-  if (p.dash) { // dash: a straight burst in the facing direction, no gravity
+  if (p.dash) {
     p.dash--; p.vx = p.face * DASH; p.vy = 0;
     if (t % 2) parts.push({ x: p.x + 5, y: p.y + 4 + Math.random() * 8, vx: 0, vy: 0, life: 12, c: '#ffffffaa' });
   } else {
     p.vx += (dir * WALK - p.vx) * (p.ground ? 0.25 : 0.12);
     p.vy = Math.min(p.vy + GRAV, 7);
   }
-  p.coyote = p.ground ? 6 : p.coyote - 1; // can still jump a few frames after walking off a ledge
+  p.coyote = p.ground ? 6 : p.coyote - 1;
   if (p.ground) p.jumps = 0;
-  if (jumpBuf > 0 && (p.coyote > 0 || p.jumps < 2)) { // A jumps, A again in the air = double jump
+  if (jumpBuf > 0 && (p.coyote > 0 || p.jumps < 2)) {
     const air = p.coyote <= 0;
     p.vy = air ? -DOUBLE : -JUMP; p.jumps = air ? 2 : 1; p.dash = 0;
     p.coyote = 0; jumpBuf = 0;
@@ -199,13 +188,13 @@ function update() {
   if (p.y > H + 16) return die();
 
   for (const e of enemies) {
-    e.vx = e.dir * (LEVELS[lvl].enemySpeed || 0.5); // later levels have faster enemies
+    e.vx = e.dir * (LEVELS[lvl].enemySpeed || 0.5);
     e.vy = Math.min(e.vy + GRAV, 7); move(e);
     const ahead = tile(Math.floor((e.dir > 0 ? e.x + e.w + 1 : e.x - 1) / T), Math.floor((e.y + e.h + 2) / T));
     if (e.wall || (e.ground && !solid(ahead))) e.dir *= -1;
     if (e.y > H + 16) e.dead = true;
     if (!e.dead && hit(p, e)) {
-      if (p.dash || (p.vy > 0 && p.y + p.h - e.y < 8)) { // dash into it, or stomp it
+      if (p.dash || (p.vy > 0 && p.y + p.h - e.y < 8)) {
         e.dead = true; if (!p.dash) p.vy = -4.5; burst(e.x + 6, e.y + 6, '#b28dff', 12); sfx(330, 0.1);
       }
       else return die();
@@ -215,7 +204,6 @@ function update() {
   camX = Math.max(0, Math.min(map[0].length * T - W, p.x - W / 2 + 5));
 }
 
-// ---------- drawing (Fez-ish pixel art, all rectangles) ----------
 const hash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
 const mod = (a, n) => ((a % n) + n) % n;
 const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
@@ -227,7 +215,7 @@ function drawTile(L, c, x, y) {
     rect(X + h % 12 + 1, Y + (h >> 4) % 10 + 4, 3, 1, DARK);
     rect(X + (h >> 8) % 12 + 1, Y + (h >> 12) % 10 + 4, 2, 1, DARK);
     rect(X, Y + T - 1, T, 1, DARK); rect(X + T - 1, Y, 1, T, DARK); rect(X, Y, 1, T, LIGHT);
-    if (!'#B'.includes(tile(x, y - 1))) { // grass on top, with drips like Fez vines
+    if (!'#B'.includes(tile(x, y - 1))) {
       rect(X, Y, T, 4, L.grass); rect(X, Y, T, 1, LIGHT);
       rect(X + h % 13, Y + 4, 2, 2 + (h >> 5) % 4, L.grass);
       rect(X + (h >> 9) % 14, Y + 4, 1, 2, L.grass);
@@ -241,15 +229,15 @@ function drawTile(L, c, x, y) {
       rect(X + i * 4 + 1, Y + 8, 2, 8, '#e8ecf5'); rect(X + i * 4, Y + 12, 4, 4, '#e8ecf5');
       rect(X + i * 4 + 2, Y + 9, 1, 7, DARK);
     }
-  } else if (c === 'F' || c === 'f') { // checkpoint flag, lights up once touched
+  } else if (c === 'F' || c === 'f') {
     rect(X + 7, Y + 1, 2, 15, '#ece3d0');
     rect(X + 9, Y + 2, 6, 5, c === 'f' ? '#ffd84a' : '#8a8fb0');
-  } else if (c === 'o') { // spinning golden cube
+  } else if (c === 'o') {
     const cy = Y + 4 + Math.round(Math.sin(t * 0.08 + x) * 2), lw = Math.round(4 + 3.5 * Math.sin(t * 0.06 + x));
     rect(X + 4, cy, 8, 3, '#fff3a6');
     rect(X + 4, cy + 3, lw, 5, '#ffd84a');
     rect(X + 4 + lw, cy + 3, 8 - lw, 5, '#d99a1e');
-  } else if (c === 'D') { // stone doorway, 1.5 tiles tall
+  } else if (c === 'D') {
     rect(X - 2, Y - 8, T + 4, T + 8, '#ece3d0'); rect(X, Y - 10, T, 2, '#ece3d0');
     rect(X + 2, Y - 6, T - 4, T + 6, '#2a1f3d'); rect(X + 4, Y - 8, T - 8, 2, '#2a1f3d');
     ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t * 0.1);
@@ -261,12 +249,12 @@ function drawTile(L, c, x, y) {
 function drawPlayer(p) {
   const x = Math.round(p.x), fy = Math.round(p.y), f = p.face,
     step = p.ground && Math.abs(p.vx) > 0.3 ? (t >> 3) % 2 : 0, y = fy + step;
-  rect(x + 1, y + 3, 8, 1, '#fff'); rect(x, y + 4, 10, 9, '#fff');      // body
-  rect(f > 0 ? x : x + 9, y + 4, 1, 9, '#d7dcef');                      // shade on the back
-  rect(x + (f > 0 ? 5 : 1), y + 6, 1, 2, INK); rect(x + (f > 0 ? 8 : 4), y + 6, 1, 2, INK); // eyes
-  rect(x + 2, y - 1, 6, 4, '#e63946'); rect(x + 2, y - 1, 6, 1, LIGHT); // fez hat
-  rect(f > 0 ? x + 1 : x + 8, y, 1, 3, INK);                            // tassel
-  rect(x + 1 + step, fy + 13, 3, 1, INK); rect(x + 6 - step, fy + 13, 3, 1, INK); // feet
+  rect(x + 1, y + 3, 8, 1, '#fff'); rect(x, y + 4, 10, 9, '#fff');
+  rect(f > 0 ? x : x + 9, y + 4, 1, 9, '#d7dcef');
+  rect(x + (f > 0 ? 5 : 1), y + 6, 1, 2, INK); rect(x + (f > 0 ? 8 : 4), y + 6, 1, 2, INK);
+  rect(x + 2, y - 1, 6, 4, '#e63946'); rect(x + 2, y - 1, 6, 1, LIGHT);
+  rect(f > 0 ? x + 1 : x + 8, y, 1, 3, INK);
+  rect(x + 1 + step, fy + 13, 3, 1, INK); rect(x + 6 - step, fy + 13, 3, 1, INK);
 }
 
 function drawEnemy(e) {
@@ -285,12 +273,12 @@ function draw() {
   if (L.stars) for (let i = 0; i < 50; i++)
     if ((i + (t >> 4)) % 9) rect(Math.round(mod(i * 67 - cx * 0.05, W)), (i * 41) % 100, 1, 1, '#fff');
 
-  for (let i = 0; i < 6; i++) { // clouds
+  for (let i = 0; i < 6; i++) {
     const x = Math.round(mod(i * 97 - cx * 0.15 - t * 0.08, W + 60) - 40), y = 12 + (i * 29) % 50;
     rect(x, y + 4, 36, 6, L.cloud); rect(x + 6, y, 18, 4, L.cloud);
   }
 
-  for (let i = Math.floor(cx * 0.4 / 40) - 1, n = i + W / 40 + 3; i < n; i++) { // far towers
+  for (let i = Math.floor(cx * 0.4 / 40) - 1, n = i + W / 40 + 3; i < n; i++) {
     const x = Math.round(i * 40 - cx * 0.4), h = 50 + hash(i, 7) % 70, w = 20 + hash(i, 3) % 16;
     rect(x, H - h, w, h, L.far); rect(x - 2, H - h, w + 4, 3, LIGHT);
     for (let wy = H - h + 10; wy < H - 10; wy += 14) rect(x + (w >> 1) - 1, wy, 3, 5, DARK);
@@ -305,7 +293,6 @@ function draw() {
   ctx.restore();
 }
 
-// fixed 60 updates/sec so 120Hz phones don't run double speed
 let last = performance.now(), acc = 0;
 function frame(now) {
   acc += Math.min(now - last, 100); last = now;

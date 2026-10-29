@@ -1,17 +1,8 @@
-// Session rules that help a child stop playing ("designing for disengagement").
-// Principles: autonomy (the child can stop any time and picks activities), gradual transition
-// (warning, slow fade of color and music), satisfying endings (stop at a finished level),
-// continuity (progress is saved), social context (grown-up settings), no rewards for staying.
-// The sensors are tools here: camera = find a color, steps = walk, stillness = calm down,
-// microphone = hum, angry shaking = scrambled controls.
-
-// ---- calibration knobs: tune these on real phones ----
-const SHAKE_ANGRY = 18;  // m/s² of shaking that counts as "frustrated"
-const STILL = 0.8;       // m/s² of motion below this = phone held still
-const HUM_LEVEL = 0.04;  // mic volume (0..1) that counts as humming
+const SHAKE_ANGRY = 18;
+const STILL = 0.8;
+const HUM_LEVEL = 0.04;
 const CALM_SECONDS = 8, HUM_SECONDS = 3;
 
-// everything a grown-up can change (numbers are minutes unless the label says otherwise)
 const DEFAULTS = {
   session: 15, breakEvery: 5, warn: 2, week: 120,
   photo: true, walk: true, steps: 20, calm: true, hum: true,
@@ -33,13 +24,12 @@ const FORM = [
 ];
 const COLORS = { red: [0, '#e63946'], orange: [28, '#f4a261'], yellow: [55, '#ffd84a'], green: [125, '#6fd17c'], blue: [215, '#4a90e2'], purple: [275, '#b28dff'] };
 
-// ---------- saved data (this device only) ----------
 const get = (k, d) => { try { return JSON.parse(localStorage.getItem('cubehop.' + k)) ?? d; } catch { return d; } };
 const put = (k, v) => { try { localStorage.setItem('cubehop.' + k, JSON.stringify(v)); } catch {} };
 let S = { ...DEFAULTS, ...get('settings', {}) };
-if (/[?&]dev\b/.test(location.search)) S.dev = true; // or open the page with ?dev
+if (/[?&]dev\b/.test(location.search)) S.dev = true;
 
-function weekId() { // the Monday of this week
+function weekId() {
   const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
   return d.toDateString();
 }
@@ -47,13 +37,11 @@ let week = get('week', {});
 const checkWeek = () => { if (week.id !== weekId()) week = { id: weekId(), used: 0 }; };
 checkWeek();
 
-// ---------- sensors ----------
 let motion = 0, steps = 0, stepUp = false, lastStep = 0, analyser = null, stream = null;
 addEventListener('devicemotion', e => {
   const a = e.acceleration, g = e.accelerationIncludingGravity;
   const gm = g && g.x != null ? Math.hypot(g.x, g.y, g.z) : 9.81;
   motion = a && a.x != null ? Math.hypot(a.x, a.y, a.z) : Math.abs(gm - 9.81);
-  // a step = gravity spikes above ~1.2g, then drops back
   if (!stepUp && gm > 11.5 && e.timeStamp - lastStep > 300) { stepUp = true; steps++; lastStep = e.timeStamp; }
   else if (gm < 10.2) stepUp = false;
 });
@@ -67,10 +55,9 @@ function readMic() {
   return Math.sqrt(s / wave.length);
 }
 
-// ---------- session timing and effects ----------
 let used = 0, extra = 0, nextBreak = Infinity, warned = false, timeUp = false, hardStop = false;
 let invertUntil = 0, angry = 0, activityTick = null, lastFilter = '';
-const left = () => Math.min(S.session * 60 + extra - used, S.week * 60 - week.used); // seconds
+const left = () => Math.min(S.session * 60 + extra - used, S.week * 60 - week.used);
 
 function startSession(level, cubes) {
   checkWeek();
@@ -86,10 +73,10 @@ function startSession(level, cubes) {
   loadLevel(level);
 }
 
-function onTick() { // every 1/60 s while in a game, even when a card is open
+function onTick() {
   if (activityTick) activityTick();
   if (paused) return;
-  used += 1 / 60; if (!S.dev) week.used += 1 / 60; // dev testing doesn't eat the weekly time
+  used += 1 / 60; if (!S.dev) week.used += 1 / 60;
   if (t % 120 === 0) put('week', week);
   const l = left(), over = -l;
 
@@ -98,7 +85,6 @@ function onTick() { // every 1/60 s while in a game, even when a card is open
   if (!timeUp && l <= 0) { timeUp = true; if (S.block) return timesUp(); toast("Time's up! Finish this level"); }
   if (!hardStop && S.block && over >= 150) { hardStop = true; return stopCard(); }
 
-  // gradual fade before the end, harsher effects in overtime
   const fade = S.fade && S.warn > 0 ? Math.min(1, Math.max(0, 1 - l / (S.warn * 60))) : 0;
   const gray = devFx.gray ? 1 : fade;
   const filter = `grayscale(${gray.toFixed(2)})` + (devFx.negative || (S.negative && over > 30) ? ' invert(1)' : '');
@@ -110,7 +96,6 @@ function onTick() { // every 1/60 s while in a game, even when a card is open
   fx.frozen = t < devFreeze || (S.freeze && over > 120 && over < 126);
   fx.starve = devFx.starve || (S.starve && over > 0);
 
-  // frustration: hard shaking scrambles the controls; calming down fixes them
   angry = (keys.KeyE ? 25 : motion) > SHAKE_ANGRY ? angry + 1 : Math.max(0, angry - 1);
   if (S.shakeInvert && angry > 20 && t >= invertUntil) {
     angry = 0; invertUntil = t + 30 * 60; sfx(150, 0.5, 'sawtooth');
@@ -124,7 +109,6 @@ function onTick() { // every 1/60 s while in a game, even when a card is open
   $('timeFill').style.width = Math.min(100, used / (used + Math.max(0, l)) * 100) + '%';
 }
 
-// ---------- cards (pop-ups) ----------
 let cardId = 0;
 function modal(html, buttons = []) {
   stopMedia(); activityTick = null; paused = true;
@@ -145,7 +129,6 @@ const progress = f => { const b = $('prog'); if (b) b.style.width = Math.min(100
 const pick = a => a[Math.random() * a.length | 0];
 const success = msg => modal(`<h2>${msg}</h2>`, [['▶ Back to the game', closeModal]]);
 
-// an activity card: "Back" lets the child pick something else; "Skip" exists only on PC for testing
 const card = (html, done, back) => modal(html, [['↩ Back', back, 'ghost'], ['Skip (PC test)', done, 'ghost pc']]);
 
 const ACTS = [['photo', '📷 Find a color', photo], ['walk', '🚶 Take a walk', walk], ['calm', '🧘 Breathe', calm], ['hum', '🎤 Hum a song', hum]];
@@ -178,11 +161,11 @@ function stopCard() {
 function addTime() {
   extra += 300; week.used = Math.max(0, week.used - 300);
   warned = timeUp = hardStop = false;
-  if (S.breakEvery > 0) nextBreak = used + S.breakEvery * 60; // no break popping up right away
+  if (S.breakEvery > 0) nextBreak = used + S.breakEvery * 60;
   closeModal();
 }
 
-function onLevelDone() { // called by game.js when the player reaches a door
+function onLevelDone() {
   const next = (lvl + 1) % LEVELS.length, last = next === 0;
   put('save', { lvl: next, total });
   if (timeUp) return endSession('You finished just in time!', true);
@@ -193,7 +176,7 @@ function onLevelDone() { // called by game.js when the player reaches a door
 }
 
 function endSession(msg = 'Great playing!', saved = false) {
-  if (!saved) { total = startTotal; put('save', { lvl, total }); } // resume at the start of this level
+  if (!saved) { total = startTotal; put('save', { lvl, total }); }
   put('week', week);
   const mins = Math.max(1, Math.round(used / 60));
   modal(`<h2>${msg} 🌟</h2><p>You played ${mins} min and have ◆ ${total} cubes.<br>Your progress is saved, see you next time!</p><p>💬 Tell a grown-up what you did today</p>`,
@@ -201,7 +184,7 @@ function endSession(msg = 'Great playing!', saved = false) {
   playing = false;
 }
 
-function grownUp(then, back, note = '') { // simple parent gate
+function grownUp(then, back, note = '') {
   const a = 6 + pick([0, 1, 2, 3, 4, 5, 6]), b = 3 + pick([0, 1, 2, 3, 4, 5, 6]);
   modal(`<h2>For grown-ups</h2>${note}<p>What is ${a} × ${b}?</p><input id="gate" type="number" inputmode="numeric">`, [
     ['OK', () => (+$('gate').value === a * b ? then() : grownUp(then, back, '<p>Not quite, try again!</p>'))],
@@ -241,8 +224,7 @@ function showTitle() {
   $('resetWeek').classList.toggle('hidden', wl > 0);
 }
 
-// ---------- activities ----------
-function calm(done, back) { // hold the phone still while a circle breathes
+function calm(done, back) {
   card(`<h2>🧘 Hold the phone still<br>and breathe slowly</h2><div class="breathe"></div><p id="breath"></p><i class="bar"><b id="prog"></b></i>`, done, back);
   let still = 0;
   activityTick = () => {
@@ -268,7 +250,7 @@ function hum(done, back) {
   const id = card(`<h2>🎤 Hum your favorite song</h2><p id="msg">Keep humming until the bar is full</p><i class="bar"><b id="prog"></b></i>`, done, back);
   navigator.mediaDevices?.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
     .then(s => {
-      if (id !== cardId) return s.getTracks().forEach(k => k.stop()); // card already closed
+      if (id !== cardId) return s.getTracks().forEach(k => k.stop());
       stream = s; analyser = ac.createAnalyser(); analyser.fftSize = 512;
       ac.createMediaStreamSource(s).connect(analyser);
     })
@@ -281,7 +263,7 @@ function hum(done, back) {
   };
 }
 
-function photo(done, back) { // point the camera at something of a given color and snap
+function photo(done, back) {
   const names = Object.keys(COLORS).filter(c => S[c]), name = pick(names.length ? names : Object.keys(COLORS));
   const [hue, hex] = COLORS[name];
   const id = modal(`<h2>📷 Find something <b style="color:${hex}">${name.toUpperCase()}</b></h2><div class="cam"><video playsinline muted autoplay></video></div><p id="msg">Fill the square with it and press SNAP</p>`, [
@@ -308,7 +290,7 @@ function photo(done, back) { // point the camera at something of a given color a
   }
 }
 
-function hsl(r, g, b) { // → [hue 0-360, saturation 0-1, lightness 0-1]
+function hsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
   if (!d) return [0, 0, l];
@@ -316,11 +298,10 @@ function hsl(r, g, b) { // → [hue 0-360, saturation 0-1, lightness 0-1]
   return [h * 60, d / (1 - Math.abs(2 * l - 1)), l];
 }
 
-// ---------- dev mode: try each friction mechanic on demand ----------
 const devFx = {};
 let devFreeze = 0;
 function devCard() {
-  const end = S.session * 60 + extra, clock = s => () => { used = s; closeModal(); }; // move the clock, the real rules react
+  const end = S.session * 60 + extra, clock = s => () => { used = s; closeModal(); };
   const toggle = (k, label) => [(devFx[k] ? '✓ ' : '') + label, () => { devFx[k] = !devFx[k]; devCard(); }, devFx[k] ? '' : 'ghost'];
   const angryShake = () => { closeModal(); invertUntil = t + 30 * 60; toast('Shaking scrambled the controls!\nTap 🧘 to calm down'); };
   const lockWeek = () => { week.used = S.week * 60; put('week', week); endSession('This week is used up'); };
@@ -344,11 +325,10 @@ function devCard() {
   }
 }
 
-// ---------- buttons ----------
 onPress($('continue'), () => { unlock(); const s = get('save', { lvl: 0, total: 0 }); startSession(s.lvl, s.total); });
 onPress($('newGame'), () => { unlock(); startSession(0, 0); });
 onPress($('parents'), () => grownUp(settingsCard, showTitle));
-onPress($('resetWeek'), () => { // for testing; behind the grown-up question unless dev mode is on
+onPress($('resetWeek'), () => {
   const reset = () => { week.used = 0; put('week', week); showTitle(); };
   S.dev ? reset() : grownUp(reset, showTitle);
 });

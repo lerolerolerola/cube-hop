@@ -36,7 +36,6 @@ button:active { transform: translateY(3px); box-shadow: 0 2px 0 #c9971f; }
 button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px #fff; }
 .hidden { display: none !important; }
 
-/* ---------- HUD ---------- */
 #hud {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -54,9 +53,8 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
 #time { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 #timeBar { position: relative; display: block; width: 120px; height: 12px; border: 2px solid #fff; background: #0004; }
 #timeFill { display: block; height: 100%; width: 0; background: #ffd84a; }
-#notches span { position: absolute; top: -5px; bottom: -5px; width: 2px; background: #7fe0c2; } /* activity breaks */
+#notches span { position: absolute; top: -5px; bottom: -5px; width: 2px; background: #7fe0c2; }
 
-/* ---------- D-pad and A/B ---------- */
 #pad {
   position: fixed;
   left: 0; right: 0; bottom: 0;
@@ -84,7 +82,6 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
 #ab button { width: 64px; height: 64px; border-radius: 50%; padding: 0; font-size: 18px; }
 #bA { background: #e63946; color: #fff; box-shadow: 0 5px 0 #a4202b; margin-bottom: 28px; }
 
-/* ---------- messages ---------- */
 #hint {
   position: fixed;
   top: 28%; left: 0; right: 0;
@@ -95,7 +92,7 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
   text-shadow: 3px 3px 0 #1b1f4b;
   opacity: 0;
   pointer-events: none;
-  z-index: 9; /* above cards, so errors and tips are visible */
+  z-index: 9;
 }
 #hint.show { animation: hint 4s; }
 @keyframes hint { 10%, 80% { opacity: 1; } to { opacity: 0; } }
@@ -137,10 +134,9 @@ h3 { font-size: 10px; color: #7fe0c2; align-self: flex-start; margin-top: 8px; }
 }
 .row { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 9px; line-height: 1.6; text-align: left; cursor: pointer; }
 .row input[type=checkbox] { flex: none; width: 20px; height: 20px; accent-color: #ffd84a; }
-.row input[type=number], #gate { margin-left: auto; width: 80px; font: inherit; font-size: 16px; /* under 16px makes iPhones zoom in */ padding: 6px; text-align: center; }
+.row input[type=number], #gate { margin-left: auto; width: 80px; font: inherit; font-size: 16px;  padding: 6px; text-align: center; }
 #gate { margin: 0; width: 120px; font-size: 18px; user-select: text; -webkit-user-select: text; }
 
-/* ---------- activities ---------- */
 .bar { display: block; width: 100%; max-width: 320px; height: 16px; border: 3px solid #fff; }
 .bar b { display: block; height: 100%; width: 0; background: #7fe0c2; }
 .big { font-size: 26px !important; }
@@ -148,7 +144,7 @@ h3 { font-size: 10px; color: #7fe0c2; align-self: flex-start; margin-top: 8px; }
 @keyframes breathe { 50% { transform: scale(1.8); opacity: .6; } }
 .cam { position: relative; width: min(320px, 60vh); aspect-ratio: 4 / 3; overflow: hidden; border: 3px solid #fff; background: #000; }
 .cam video { display: block; width: 100%; height: 100%; object-fit: cover; }
-.cam::after { /* the square that gets checked for the color */
+.cam::after {
   content: '';
   position: absolute;
   left: 50%; top: 50%;

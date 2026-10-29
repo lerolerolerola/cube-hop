@@ -1,7 +1,3 @@
-// Each level is 11 rows. Rows can be any length (they get padded).
-//  #  ground       B  brick         o  golden cube    ^  spikes
-//  E  enemy        F  checkpoint    P  player start   D  door (exit)
-// Levels get harder: 1 jump · 2 double jump · 3 dash · 4 everything + faster enemies
 const LEVELS = [
   {
     name: '1 · VILLAGE',

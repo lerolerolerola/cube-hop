@@ -1,6 +1,6 @@
 # Cube Hop
 
-A pixel-art platformer for phones, built to explore **designing for disengagement**: helping children stop playing in a healthy way.
+A pixel-art platformer for phones about **designing for disengagement**: helping children stop playing in a healthy way.
 
 The game plays like a normal mobile game (D-pad + A/B buttons). The phone's sensors are not controls. They are tools for taking breaks and ending a session.
 
@@ -48,38 +48,6 @@ time's-up pop-up → negative colors (30 s) → controls swap (1 min) → game i
 
 **Weekly time:** play time is counted per week. When it's used up, the game is locked until Monday (a grown-up can reset it).
 
-Everything is saved on the device only (localStorage). Nothing is sent anywhere.
+Everything is saved on the device only. Nothing is sent anywhere.
 
-## Test on your computer
-
-The camera, microphone and motion sensors only work from `localhost` or `https`. Run this in the game folder:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then open http://localhost:8000. On PC, activity cards have a **Skip (PC test)** button. Tip: in ⚙ Grown-ups, set the session to 1 minute and breaks to 0.5 to see everything quickly.
-
-## Publish changes to GitHub Pages
-
-```bash
-git add -A
-git commit -m "update"
-git push
-```
-
-Live at https://lerolerolerola.github.io/cube-hop/ about a minute later.
-
-## Files
-
-- `game.js`: the platformer (controls, physics, drawing, sound)
-- `session.js`: time limits, breaks, activities, end-of-play effects, grown-up settings
-- `levels.js`: the levels as text, easy to edit:
-  ```
-  #  ground     B  brick       o  cube        ^  spikes
-  E  enemy      F  checkpoint  P  start       D  door (exit)
-  ```
-
-## Tuning for real phones
-
-Top of `session.js`: `SHAKE_ANGRY` (how hard a frustrated shake is), `STILL` (how still counts as calm), `HUM_LEVEL` (how loud humming must be), `CALM_SECONDS`, `HUM_SECONDS`.
+Play: https://lerolerolerola.github.io/cube-hop/
