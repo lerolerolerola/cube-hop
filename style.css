@@ -50,10 +50,10 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
 #hud button { pointer-events: auto; }
 .icon { font-family: system-ui, sans-serif; font-size: 16px; padding: 4px 8px; background: #1b1f4b88; color: #fff; box-shadow: none; }
 #cubes { color: #ffd84a; }
-#time { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-#timeBar { position: relative; display: block; width: 120px; height: 12px; border: 2px solid #fff; background: #0004; }
+#time { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+#timeBar { position: relative; display: block; width: min(220px, 30vw); height: 20px; border: 3px solid #fff; background: #0004; }
 #timeFill { display: block; height: 100%; width: 0; background: #ffd84a; }
-#notches span { position: absolute; top: -5px; bottom: -5px; width: 2px; background: #7fe0c2; }
+#notches span { position: absolute; top: -6px; bottom: -6px; width: 3px; background: #7fe0c2; }
 
 #pad {
   position: fixed;
