@@ -32,7 +32,7 @@ Dev mode doesn't use up the weekly play time.
 | **Autonomy** | ⏸ → "Stop playing" at any time; the child picks the break activity; "I'm done for today" on every break; "Stop here" after every level |
 | **Gradual transition** | A warning before the end; colors fade to gray and the music slows down |
 | **Satisfying ending** | When time runs out the child can finish the current level, then gets an ending card |
-| **Continuity** | Progress is saved (resumes at the start of the level) |
+| **Continuity** | Progress is saved (resumes at the start of the level). So is today's play time: Stop playing → Continue does not reset the bar |
 | **Social context** | A grown-up panel (behind a math question) sets the times, activities and effects; the ending card says "tell a grown-up what you did" |
 | **No manipulation** | No rewards for staying, no streaks, no timers that pull the child back |
 

@@ -61,7 +61,7 @@ Princípios que extraímos do artigo *Designing for Disengagement* (Alsheail, Al
 | **Autonomia** | Botão de pausa com "Parar de jogar" a qualquer momento; a criança escolhe a atividade da pausa ou adia-a ("Agora não"); "Acabei por hoje" em todas as pausas; "Parar aqui" depois de cada nível; a fricção desaparece assim que faz uma pausa |
 | **Transição gradual** | Aviso antes do fim; cores desvanecem para cinzento e a música abranda |
 | **Conclusão satisfatória** | Quando o tempo acaba, a criança tem 2 minutos para terminar o nível atual e recebe um cartão final |
-| **Continuidade** | O progresso fica guardado (retoma no início do nível) |
+| **Continuidade** | O progresso fica guardado (retoma no início do nível). O tempo de jogo do dia também: parar e carregar em CONTINUE não reinicia a barra |
 | **Contexto social** | Painel de adultos (atrás de uma conta de multiplicar); o cartão final diz "conta a um adulto o que fizeste" |
 | **Evitar manipulação** | Sem prémios por ficar, sem streaks, sem temporizadores que puxam a criança de volta; não há tempo extra |
 

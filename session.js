@@ -38,6 +38,11 @@ function weekId() {
 let week = get('week', {});
 const checkWeek = () => { if (week.id !== weekId()) week = { id: weekId(), used: 0 }; };
 checkWeek();
+// Today's session clock survives Stop playing → Continue (it was reset on every start).
+let day = get('day', {});
+const checkDay = () => { if (day.id !== new Date().toDateString()) day = { id: new Date().toDateString(), used: 0, extra: 0 }; };
+const saveDay = () => { day.used = used; day.extra = extra; put('day', day); };
+const dayLeft = () => (checkDay(), S.session * 60 + day.extra - day.used);
 
 let motion = 0, steps = 0, stepUp = false, lastStep = 0, analyser = null, stream = null;
 addEventListener('devicemotion', e => {
@@ -67,9 +72,10 @@ const left = () => Math.min(S.session * 60 + extra - used, S.week * 60 - week.us
 
 function startSession(level, cubes) {
   checkWeek();
-  if (S.week * 60 - week.used <= 0) return showTitle();
-  used = extra = sinceBreak = snoozes = finishBy = 0; warned = timeUp = streakWarned = lateEnd = false; invertUntil = 0;
-  nextBreak = S.breakEvery > 0 ? S.breakEvery * 60 : Infinity;
+  if (S.week * 60 - week.used <= 0 || dayLeft() <= 0) return showTitle();
+  used = day.used; extra = day.extra;
+  sinceBreak = snoozes = finishBy = 0; warned = timeUp = streakWarned = lateEnd = false; invertUntil = 0;
+  nextBreak = S.breakEvery > 0 ? (Math.floor(used / (S.breakEvery * 60)) + 1) * S.breakEvery * 60 : Infinity;
   $('notches').innerHTML = '';
   for (let m = S.breakEvery; S.breakEvery > 0 && m < S.session; m += S.breakEvery)
     $('notches').innerHTML += `<span style="left:${m / S.session * 100}%"></span>`;
@@ -86,7 +92,7 @@ function onTick() {
   if (activityTick) activityTick();
   if (paused) return;
   used += 1 / 60; sinceBreak += 1 / 60; if (!S.dev) week.used += 1 / 60;
-  if (t % 120 === 0) put('week', week);
+  if (t % 120 === 0) { put('week', week); saveDay(); }
   const l = left();
 
   if (used >= nextBreak && l > S.warn * 60) { nextBreak = Infinity; return breakTime(); }
@@ -185,9 +191,9 @@ function onLevelDone() {
 
 function endSession(msg = 'Great playing!', saved = false) {
   if (!saved) { total = startTotal; put('save', { lvl, total }); }
-  put('week', week);
+  put('week', week); saveDay();
   const mins = Math.max(1, Math.round(used / 60));
-  modal(`<h2>${msg} 🌟</h2><p>You played ${mins} min and have ◆ ${total} cubes.<br>Your progress is saved, see you next time!</p><p>💬 Tell a grown-up what you did today</p>`,
+  modal(`<h2>${msg} 🌟</h2><p>You played ${mins} min today and have ◆ ${total} cubes.<br>Your progress is saved, see you next time!</p><p>💬 Tell a grown-up what you did today</p>`,
     [['🏠 Home', showTitle]]);
   playing = false;
 }
@@ -215,7 +221,7 @@ function settingsCard() {
       for (const k in DEFAULTS) S[k] = typeof DEFAULTS[k] === 'number' ? Math.max(0, +$('s_' + k).value || 0) : $('s_' + k).checked;
       put('settings', S); showTitle();
     }],
-    ["Reset this week's time", () => { week.used = 0; put('week', week); settingsCard(); }, 'ghost'],
+    ["Reset this week's time", () => { week.used = 0; put('week', week); day = {}; put('day', day); settingsCard(); }, 'ghost'],
     ['Cancel', showTitle, 'ghost'],
   ]);
 }
@@ -225,8 +231,9 @@ function showTitle() {
   Object.assign(fx, { inverted: false, betray: false, musicRate: 1, offKey: false });
   cv.style.filter = lastFilter = '';
   $('hud').classList.add('hidden'); $('pad').classList.add('hidden'); $('title').classList.remove('hidden');
-  const wl = Math.max(0, S.week * 60 - week.used), save = get('save', null);
-  $('weekInfo').textContent = wl > 0 ? `Play time left this week: ${Math.ceil(wl / 60)} min` : "This week's play time is used up. It comes back on Monday! 🌙";
+  const wl = Math.max(0, Math.min(S.week * 60 - week.used, dayLeft())), save = get('save', null);
+  $('weekInfo').textContent = wl > 0 ? `Play time left today: ${Math.ceil(wl / 60)} min`
+    : dayLeft() <= 0 ? "Today's play time is used up. See you tomorrow! 🌙" : "This week's play time is used up. It comes back on Monday! 🌙";
   $('continue').classList.toggle('hidden', !save || wl <= 0);
   $('newGame').classList.toggle('hidden', wl <= 0);
   $('resetWeek').classList.toggle('hidden', wl > 0);
@@ -331,7 +338,7 @@ function devCard() {
     ['⏩ Wind down', clock(end - S.warn * 60 + 1)],
     ["⏰ Time's up", () => { timeUp = false; clock(end)(); }],
     ...[0, 2, 4, 6].map(m => [`${S.streak + m} min no break`, () => { sinceBreak = (S.streak + m) * 60 + 0.5; closeModal(); }]),
-    ['↺ Reset clock', () => { used = sinceBreak = snoozes = finishBy = invertUntil = 0; warned = timeUp = streakWarned = false; for (const k in devFx) devFx[k] = false; closeModal(); }],
+    ['↺ Reset clock', () => { used = extra = sinceBreak = snoozes = finishBy = invertUntil = 0; warned = timeUp = streakWarned = false; for (const k in devFx) devFx[k] = false; closeModal(); }],
   ]);
   $('modal').querySelector('.btns').insertAdjacentHTML('afterend', '<p>Or switch one effect on by itself:</p><div class="btns" id="devToggles"></div>');
   for (const [label, fn, cls] of [
@@ -350,7 +357,7 @@ onPress($('continue'), () => { unlock(); const s = get('save', { lvl: 0, total: 
 onPress($('newGame'), () => { unlock(); startSession(0, 0); });
 onPress($('parents'), () => grownUp(settingsCard, showTitle));
 onPress($('resetWeek'), () => {
-  const reset = () => { week.used = 0; put('week', week); showTitle(); };
+  const reset = () => { week.used = 0; put('week', week); day = {}; put('day', day); showTitle(); };
   S.dev ? reset() : grownUp(reset, showTitle);
 });
 onPress($('pause'), () => modal('<h2>⏸ Paused</h2>', [['▶ Resume', closeModal], ['🏁 Stop playing', () => endSession()]]));
