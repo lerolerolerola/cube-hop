@@ -72,7 +72,7 @@ function music() {
   nextNote = ac.currentTime + 0.22 / fx.musicRate;
 }
 
-onPress($('mute'), () => { muted = !muted; $('mute').textContent = muted ? '🔇' : '🔊'; });
+onPress($('mute'), () => { muted = !muted; $('mute').innerHTML = ic(muted ? 'mute' : 'sound'); });
 
 let lvl = 0, map, player, enemies, parts = [], total = 0, startTotal = 0, camX = 0, t = 0, dead = 0, spawn;
 let playing = false, paused = false;
@@ -103,11 +103,11 @@ function onPress(el, fn) {
   el.onclick = e => e.detail === 0 && fn(e);
 }
 
-addEventListener('error', e => toast('⚠ ' + e.message));
+addEventListener('error', e => toast(':warn: ' + e.message));
 
 function toast(text) {
   const h = $('hint');
-  h.textContent = text;
+  h.innerHTML = icons(text);
   h.classList.remove('show'); void h.offsetWidth; h.classList.add('show');
 }
 

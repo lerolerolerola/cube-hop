@@ -8,24 +8,24 @@
 <title>Cube Hop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 <canvas id="game"></canvas>
 
 <div id="hud" class="hidden">
-  <button id="pause" class="icon" aria-label="Pause">⏸</button>
-  <span id="cubes">◆ 0</span>
+  <button id="pause" class="icon" aria-label="Pause">:pause:</button>
+  <span id="cubes">:gem: 0</span>
   <span id="level"></span>
   <span id="pet" class="hidden"></span>
   <div id="time"><i id="timeBar"><b id="timeFill"></b><span id="notches"></span></i><span id="clock"></span></div>
-  <button id="devBtn" class="icon hidden" aria-label="Dev mode">🛠</button>
-  <button id="calmBtn" class="icon hidden" aria-label="Calm down">🧘</button>
-  <button id="mute" class="icon" aria-label="Sound">🔊</button>
+  <button id="devBtn" class="icon hidden" aria-label="Dev mode">:dev:</button>
+  <button id="calmBtn" class="icon hidden" aria-label="Calm down">:breathe:</button>
+  <button id="mute" class="icon" aria-label="Sound">:sound:</button>
 </div>
 
 <div id="pad" class="hidden">
-  <div id="dpad"><b class="u">▲</b><b class="l">◀</b><i></i><b class="r">▶</b><b class="d">▼</b></div>
+  <div id="dpad"><b class="u">:up:</b><b class="l">:left:</b><i></i><b class="r">:right:</b><b class="d">:down:</b></div>
   <div id="ab"><button id="bB">B</button><button id="bA">A</button></div>
 </div>
 
@@ -34,24 +34,26 @@
 <div id="title" class="screen">
   <h1>CUBE<br>HOP</h1>
   <div id="petTitle" class="hidden"></div>
-  <div id="pick" class="btns"><button id="withPip">🐻 WITH PIP</button><button id="noPip">NO MASCOT</button></div>
+  <div id="pick" class="btns"><button id="withPip">WITH PIP</button><button id="noPip">NO MASCOT</button></div>
   <p id="weekInfo"></p>
   <div class="btns">
-    <button id="continue">▶ CONTINUE</button>
+    <button id="continue">:play: CONTINUE</button>
     <button id="newGame">NEW GAME</button>
-    <button id="resetWeek">↺ RESET TIME (TEST)</button>
+    <button id="resetWeek">:reset: RESET TIME (TEST)</button>
   </div>
-  <p class="pc">💻 Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down</p>
-  <button id="parents" class="ghost">⚙ Grown-ups</button>
+  <p class="pc">:laptop: Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down</p>
+  <button id="parents" class="ghost">:gear: Grown-ups</button>
 </div>
 
 <div id="modal" class="screen hidden"></div>
 
-<div id="rotate" class="screen">↻<p>Turn your phone sideways</p></div>
+<div id="rotate" class="screen">:reset:<p>Turn your phone sideways</p></div>
 
-<script src="levels.js?v=18"></script>
-<script src="game.js?v=18"></script>
-<script src="session.js?v=18"></script>
-<script src="mascot.js?v=18"></script>
+<script src="levels.js?v=19"></script>
+<script src="icons.js?v=19"></script>
+<script>for (const e of document.querySelectorAll('#hud, #pad, #title, #rotate')) e.innerHTML = icons(e.innerHTML);</script>
+<script src="game.js?v=19"></script>
+<script src="session.js?v=19"></script>
+<script src="mascot.js?v=19"></script>
 </body>
 </html>

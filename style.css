@@ -47,6 +47,12 @@ button {
 button:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--yellow-d); }
 button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px #fff; }
 .hidden { display: none !important; }
+/* pixel icons (icons.js): same size as the text around them */
+.ic { width: 1.25em; height: 1.25em; vertical-align: -0.28em; flex: none; shape-rendering: crispEdges; }
+button .ic { width: 1.8em; height: 1.8em; vertical-align: -0.6em; margin: -0.3em .4em -0.3em 0; }
+.icon .ic, #dpad .ic { margin: 0; width: 22px; height: 22px; }
+.food .ic { width: 14px; height: 14px; margin-right: 1px; }
+#rotate .ic { width: 72px; height: 72px; }
 
 /* --- HUD --- */
 #hud {
@@ -62,7 +68,7 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
   pointer-events: none;
 }
 #hud button { pointer-events: auto; }
-.icon { font-family: system-ui, sans-serif; font-size: 18px; padding: 4px 8px; background: #1b1f4b99; color: #fff; box-shadow: none; }
+.icon { display: flex; padding: 6px; background: #1b1f4b99; color: #fff; box-shadow: none; }
 #cubes { color: var(--yellow); white-space: nowrap; }
 #level { white-space: nowrap; }
 /* time bar takes all the free space */
@@ -74,7 +80,7 @@ button.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 3px
 @media (max-width: 700px) { #level { display: none; } }
 
 #pet { display: flex; align-items: center; gap: 6px; }
-.food { font-family: var(--pixel); color: var(--red); font-size: 11px; letter-spacing: 2px; }
+.food { display: inline-flex; flex-wrap: nowrap; vertical-align: middle; color: var(--red); }
 .food i { font-style: normal; color: #ffffff44; }
 
 #pad {
