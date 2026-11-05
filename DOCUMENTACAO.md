@@ -50,7 +50,20 @@ Perto do fim ──► aviso (cores cinzentas, música abranda) ──► "Acabo
              ──► terminar o nível (máx. 2 min) ou parar ──► cartão final
 ```
 
-A barra no topo mostra o tempo da sessão; os **quadrados verdes** na barra marcam as pausas.
+A barra no topo mostra o **nível de autonomia** da criança (LV 1, LV 2, ...); o relógio ao lado mostra o tempo que falta.
+
+**Autonomia:** pontos que a criança ganha quando para por si. Só sobem, ficam guardados entre dias e estão divididos em níveis (o nível 1 precisa de 10 pontos, cada nível seguinte mais 5), para haver sensação de progresso.
+
+| Ação | Pontos |
+|---|---|
+| Fazer a pausa logo que é pedida | +3 |
+| Fazer a pausa depois de "Not now" | +2 |
+| Parar antes de o tempo acabar | +5 |
+| Parar quando o tempo acaba (ou terminar o nível nos 2 min) | +4 |
+| Acalmar depois do abanão | +1 |
+| Ser parada à força (não terminou nos 2 min) | 0 |
+
+Os adultos veem o nível e os pontos no painel e podem repor a autonomia.
 
 ### Princípios e onde aparecem
 
@@ -61,7 +74,7 @@ Princípios que extraímos do artigo *Designing for Disengagement* (Alsheail, Al
 | **Autonomia** | Botão de pausa com "Parar de jogar" a qualquer momento; a criança escolhe a atividade da pausa ou adia-a ("Agora não"); "Acabei por hoje" em todas as pausas; "Parar aqui" depois de cada nível; a fricção desaparece assim que faz uma pausa |
 | **Transição gradual** | Aviso antes do fim; cores desvanecem para cinzento e a música abranda |
 | **Conclusão satisfatória** | Quando o tempo acaba, a criança tem 2 minutos para terminar o nível atual e recebe um cartão final |
-| **Continuidade** | O progresso fica guardado (retoma no início do nível). O tempo de jogo do dia também: parar e carregar em CONTINUE não reinicia a barra |
+| **Continuidade** | O progresso fica guardado (retoma no início do nível). O tempo de jogo do dia também: parar e carregar em CONTINUE não reinicia o relógio |
 | **Contexto social** | Painel de adultos (atrás de uma conta de multiplicar); o cartão final diz "conta a um adulto o que fizeste" |
 | **Evitar manipulação** | Sem prémios por ficar, sem streaks, sem temporizadores que puxam a criança de volta; não há tempo extra |
 
@@ -126,7 +139,7 @@ O tempo de jogo conta por semana (na versão final, assumimos que é medido pelo
 
 **Pergunta de investigação:** *faz sentido ter uma mascote que guia a criança a usar estas ferramentas?*
 
-Pip é um ursinho amarelo que aparece no topo do ecrã (com uma barra de comida ●●●○○) e nos cartões, a falar com a criança.
+Pip é um ursinho amarelo que aparece no topo do ecrã (com corações de comida) e nos cartões, a falar com a criança.
 
 | Situação | O que acontece ao Pip | Comida |
 |---|---|---|
@@ -212,7 +225,7 @@ e ir a `http://localhost:8000/?dev`. Para testar sensores no telemóvel é preci
 | Ficheiro | Conteúdo |
 |---|---|
 | `index.html` | Estrutura: canvas, HUD, comandos, ecrã inicial |
-| `style.css` | Aspeto de tudo o que não é o canvas (cartões, botões, barra do tempo) |
+| `style.css` | Aspeto de tudo o que não é o canvas (cartões, botões, barra de autonomia) |
 | `levels.js` | Os 4 níveis em texto (`#` chão, `B` tijolo, `o` cubo, `^` espinhos, `E` inimigo, `F` checkpoint, `D` porta, `P` início) |
 | `game.js` | Motor do jogo: física, desenho, som, comandos |
 | `session.js` | Tudo o que é sessão: tempo, pausas, atividades, fricção, painel dos adultos, modo dev |

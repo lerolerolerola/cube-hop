@@ -32,11 +32,13 @@ Dev mode doesn't use up the weekly play time.
 | **Autonomy** | ⏸ → "Stop playing" at any time; the child picks the break activity; "I'm done for today" on every break; "Stop here" after every level |
 | **Gradual transition** | A warning before the end; colors fade to gray and the music slows down |
 | **Satisfying ending** | When time runs out the child can finish the current level, then gets an ending card |
-| **Continuity** | Progress is saved (resumes at the start of the level). So is today's play time: Stop playing → Continue does not reset the bar |
+| **Continuity** | Progress is saved (resumes at the start of the level). So is today's play time: Stop playing → Continue does not reset the clock |
 | **Social context** | A grown-up panel (behind a math question) sets the times, activities and effects; the ending card says "tell a grown-up what you did" |
 | **No manipulation** | No rewards for staying, no streaks, no timers that pull the child back |
 
-**Activity breaks** (every N minutes, shown as marks on the time bar): the sensors as tools
+**Autonomy bar** (top): points earned by stopping on your own (break right away +3, after Not now +2, stop before time is up +5, on time +4, calm down +1, forced end 0). Only goes up, kept across days, split into levels. The clock shows the time left.
+
+**Activity breaks** (every N minutes): the sensors as tools
 - 📷 **Camera:** "find something RED" (point the camera, fill the square, press SNAP)
 - 🚶 **Steps:** walk N steps holding the phone
 - 🧘 **Motion sensor:** hold the phone still and breathe

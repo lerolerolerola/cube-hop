@@ -8,7 +8,7 @@
 <title>Cube Hop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -18,7 +18,7 @@
   <span id="cubes">:gem: 0</span>
   <span id="level"></span>
   <span id="pet" class="hidden"></span>
-  <div id="time"><i id="timeBar"><b id="timeFill"></b><span id="notches"></span></i><span id="clock"></span></div>
+  <div id="time"><span id="autoLv">LV 1</span><i id="timeBar" title="Autonomy"><b id="timeFill"></b></i>:clock:<span id="clock"></span></div>
   <button id="devBtn" class="icon hidden" aria-label="Dev mode">:dev:</button>
   <button id="calmBtn" class="icon hidden" aria-label="Calm down">:breathe:</button>
   <button id="mute" class="icon" aria-label="Sound">:sound:</button>
@@ -49,11 +49,11 @@
 
 <div id="rotate" class="screen">:reset:<p>Turn your phone sideways</p></div>
 
-<script src="levels.js?v=19"></script>
-<script src="icons.js?v=19"></script>
+<script src="levels.js?v=20"></script>
+<script src="icons.js?v=20"></script>
 <script>for (const e of document.querySelectorAll('#hud, #pad, #title, #rotate')) e.innerHTML = icons(e.innerHTML);</script>
-<script src="game.js?v=19"></script>
-<script src="session.js?v=19"></script>
-<script src="mascot.js?v=19"></script>
+<script src="game.js?v=20"></script>
+<script src="session.js?v=20"></script>
+<script src="mascot.js?v=20"></script>
 </body>
 </html>

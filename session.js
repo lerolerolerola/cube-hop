@@ -44,6 +44,19 @@ const checkDay = () => { if (day.id !== new Date().toDateString()) day = { id: n
 const saveDay = () => { day.used = used; day.extra = extra; put('day', day); };
 const dayLeft = () => (checkDay(), S.session * 60 + day.extra - day.used);
 
+// Autonomy: points the child earns by stopping on their own (breaks, ending on time). Only goes up,
+// kept across days, split into levels so progress is felt. The top bar shows the current level.
+let auto = { pts: 0, ...get('auto', {}) };
+const need = n => 10 + 5 * n; // points to go from level n+1 to n+2
+function autoLevel() { let n = 0, p = auto.pts; while (p >= need(n)) p -= need(n++); return [n + 1, p / need(n)]; }
+function autoHud() { const [lv, f] = autoLevel(); $('autoLv').textContent = 'LV ' + lv; $('timeFill').style.width = f * 100 + '%'; }
+// Adds points and returns the line to show on the card.
+function gain(n) {
+  const [before] = autoLevel(); auto.pts += n; put('auto', auto); autoHud();
+  const [lv] = autoLevel();
+  return `<p class="gain">+${n} autonomy${lv > before ? `<br>:trophy: Autonomy level ${lv}!` : ''}</p>`;
+}
+
 let motion = 0, steps = 0, stepUp = false, lastStep = 0, analyser = null, stream = null;
 addEventListener('devicemotion', e => {
   const a = e.acceleration, g = e.accelerationIncludingGravity;
@@ -76,9 +89,7 @@ function startSession(level, cubes) {
   used = day.used; extra = day.extra;
   sinceBreak = snoozes = finishBy = 0; warned = timeUp = streakWarned = lateEnd = false; invertUntil = 0;
   nextBreak = S.breakEvery > 0 ? (Math.floor(used / (S.breakEvery * 60)) + 1) * S.breakEvery * 60 : Infinity;
-  $('notches').innerHTML = '';
-  for (let m = S.breakEvery; S.breakEvery > 0 && m < S.session; m += S.breakEvery)
-    $('notches').innerHTML += `<span style="left:${m / S.session * 100}%"></span>`;
+  autoHud();
   $('devBtn').classList.toggle('hidden', !S.dev);
   $('title').classList.add('hidden'); $('hud').classList.remove('hidden'); $('pad').classList.remove('hidden');
   total = cubes; playing = true; closeModal();
@@ -122,7 +133,6 @@ function onTick() {
   $('cubes').innerHTML = ic('gem') + ' ' + total;
   const s = Math.max(0, Math.ceil(l));
   $('clock').textContent = `${s / 60 | 0}:${String(s % 60).padStart(2, '0')}`;
-  $('timeFill').style.width = Math.min(100, used / (used + Math.max(0, l)) * 100) + '%';
 }
 
 let cardId = 0;
@@ -143,7 +153,6 @@ function closeModal() { stopMedia(); activityTick = null; paused = false; $('mod
 function stopMedia() { cardId++; stream?.getTracks().forEach(k => k.stop()); stream = null; analyser = null; }
 const progress = f => { const b = $('prog'); if (b) b.style.width = Math.min(100, f * 100) + '%'; };
 const pick = a => a[Math.random() * a.length | 0];
-const success = msg => modal(`<h2>${msg}</h2>`, [[':play: Back to the game', closeModal]]);
 
 const card = (html, done, back) => modal(html, [[':back: Back', back, 'ghost'], ['Skip (PC test)', done, 'ghost pc']]);
 
@@ -153,9 +162,10 @@ function breakTime() {
   const acts = ACTS.filter(([k]) => S[k]);
   if (!acts.length) return;
   const done = () => {
+    const g = gain(snoozes ? 2 : 3); // a bit more when the break is taken right away
     sinceBreak = snoozes = 0; streakWarned = false;
     nextBreak = used + S.breakEvery * 60;
-    success('Nice job! :party:');
+    modal(`<h2>Nice job! :party:</h2>${g}`, [[':play: Back to the game', closeModal]]);
   };
   const notNow = () => { snoozes++; nextBreak = used + SNOOZE; closeModal(); };
   modal(`<h2>Break time! :star:</h2><p>Pick something to do:</p>`, [
@@ -193,7 +203,9 @@ function endSession(msg = 'Great playing!', saved = false) {
   if (!saved) { total = startTotal; put('save', { lvl, total }); }
   put('week', week); saveDay();
   const mins = Math.max(1, Math.round(used / 60));
-  modal(`<h2>${msg} :star:</h2><p>You played ${mins} min today and have :gem: ${total} cubes.<br>Your progress is saved, see you next time!</p><p>:chat: Tell a grown-up what you did today</p>`,
+  // Stopping on time = autonomy; stopping before the time is up = a bit more. Forced end = nothing.
+  const g = lateEnd ? '' : gain(timeUp ? 4 : 5);
+  modal(`<h2>${msg} :star:</h2>${g}<p>You played ${mins} min today and have :gem: ${total} cubes.<br>Your progress is saved, see you next time!</p><p>:chat: Tell a grown-up what you did today</p>`,
     [[':home: Home', showTitle]]);
   playing = false;
 }
@@ -208,7 +220,7 @@ function grownUp(then, back, note = '') {
 }
 
 function settingsCard() {
-  let html = `<h2>:gear: Grown-up settings</h2><p>Played this week: ${Math.round(week.used / 60)} of ${S.week} min</p>`;
+  let html = `<h2>:gear: Grown-up settings</h2><p>Played this week: ${Math.round(week.used / 60)} of ${S.week} min<br>Autonomy: level ${autoLevel()[0]} (${auto.pts} points)</p>`;
   for (const [head, fields] of FORM) {
     html += `<h3>${head}</h3>`;
     for (const [k, label] of Object.entries(fields))
@@ -221,6 +233,7 @@ function settingsCard() {
       for (const k in DEFAULTS) S[k] = typeof DEFAULTS[k] === 'number' ? Math.max(0, +$('s_' + k).value || 0) : $('s_' + k).checked;
       put('settings', S); showTitle();
     }],
+    ['Reset autonomy level', () => { auto.pts = 0; put('auto', auto); settingsCard(); }, 'ghost'],
     ["Reset this week's time", () => { week.used = 0; put('week', week); day = {}; put('day', day); settingsCard(); }, 'ghost'],
     ['Cancel', showTitle, 'ghost'],
   ]);
@@ -232,7 +245,7 @@ function showTitle() {
   cv.style.filter = lastFilter = '';
   $('hud').classList.add('hidden'); $('pad').classList.add('hidden'); $('title').classList.remove('hidden');
   const wl = Math.max(0, Math.min(S.week * 60 - week.used, dayLeft())), save = get('save', null);
-  $('weekInfo').innerHTML = icons( wl > 0 ? `Play time left today: ${Math.ceil(wl / 60)} min`
+  $('weekInfo').innerHTML = icons(`:trophy: Autonomy level ${autoLevel()[0]}<br>`) + icons( wl > 0 ? `Play time left today: ${Math.ceil(wl / 60)} min`
     : dayLeft() <= 0 ? "Today's play time is used up. See you tomorrow! :moon:" : "This week's play time is used up. It comes back on Monday! :moon:");
   $('continue').classList.toggle('hidden', !save || wl <= 0);
   $('newGame').classList.toggle('hidden', wl <= 0);
@@ -362,5 +375,5 @@ onPress($('resetWeek'), () => {
 });
 onPress($('pause'), () => modal('<h2>:pause: Paused</h2>', [[':play: Resume', closeModal], [':flag: Stop playing', () => endSession()]]));
 onPress($('devBtn'), devCard);
-onPress($('calmBtn'), () => calm(() => { invertUntil = 0; success('Controls are back to normal :smile:'); }, closeModal));
+onPress($('calmBtn'), () => calm(() => { invertUntil = 0; modal(`<h2>Controls are back to normal :smile:</h2>${gain(1)}`, [[':play: Back to the game', closeModal]]); }, closeModal));
 showTitle();
