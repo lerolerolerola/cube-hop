@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#1b1f4b">
 <title>Cube Hop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -17,6 +17,7 @@
   <button id="pause" class="icon" aria-label="Pause">⏸</button>
   <span id="cubes">◆ 0</span>
   <span id="level"></span>
+  <span id="pet" class="hidden"></span>
   <div id="time"><i id="timeBar"><b id="timeFill"></b><span id="notches"></span></i><span id="clock"></span></div>
   <button id="devBtn" class="icon hidden" aria-label="Dev mode">🛠</button>
   <button id="calmBtn" class="icon hidden" aria-label="Calm down">🧘</button>
@@ -32,13 +33,15 @@
 
 <div id="title" class="screen">
   <h1>CUBE<br>HOP</h1>
+  <div id="petTitle" class="hidden"></div>
+  <div id="pick" class="btns"><button id="withPip">🐻 WITH PIP</button><button id="noPip">NO MASCOT</button></div>
   <p id="weekInfo"></p>
   <div class="btns">
     <button id="continue">▶ CONTINUE</button>
     <button id="newGame">NEW GAME</button>
     <button id="resetWeek">↺ RESET WEEK (TEST)</button>
   </div>
-  <p class="pc">💻 Arrows walk · Space jump · Shift dash · hold E = angry shake</p>
+  <p class="pc">💻 Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down</p>
   <button id="parents" class="ghost">⚙ Grown-ups</button>
 </div>
 
@@ -46,8 +49,9 @@
 
 <div id="rotate" class="screen">↻<p>Turn your phone sideways</p></div>
 
-<script src="levels.js?v=12"></script>
-<script src="game.js?v=12"></script>
-<script src="session.js?v=12"></script>
+<script src="levels.js?v=17"></script>
+<script src="game.js?v=17"></script>
+<script src="session.js?v=17"></script>
+<script src="mascot.js?v=17"></script>
 </body>
 </html>

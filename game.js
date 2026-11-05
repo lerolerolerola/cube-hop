@@ -10,7 +10,7 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-const fx = { inverted: false, betray: false, frozen: false, starve: false, musicRate: 1, offKey: false };
+const fx = { inverted: false, betray: false, musicRate: 1, offKey: false };
 
 const keys = {}, pad = { l: false, r: false };
 let jumpBuf = 0, dashBuf = 0;
@@ -51,6 +51,7 @@ function unlock() {
   ac = ac || new (window.AudioContext || window.webkitAudioContext)();
   ac.resume();
   window.DeviceMotionEvent?.requestPermission?.().catch(() => {});
+  window.DeviceOrientationEvent?.requestPermission?.().catch(() => {});
   if (matchMedia('(pointer: coarse)').matches)
     document.documentElement.requestFullscreen?.().then(() => screen.orientation.lock?.('landscape')).catch(() => {});
   navigator.wakeLock?.request('screen').catch(() => {});
@@ -65,7 +66,7 @@ function sfx(f, d = 0.1, type = 'square', v = 0.06, detune = 0) {
 }
 
 function music() {
-  if (!ac || muted || !playing || paused || fx.frozen || ac.currentTime < nextNote) return;
+  if (!ac || muted || !playing || paused || ac.currentTime < nextNote) return;
   const f = SONG[note++ % SONG.length];
   if (f) sfx(f * fx.musicRate, 0.22, 'triangle', 0.05, fx.offKey ? (Math.random() - 0.5) * 300 : 0);
   nextNote = ac.currentTime + 0.22 / fx.musicRate;
@@ -146,10 +147,7 @@ function die() { dead = 45; burst(player.x + 5, player.y + 7, '#fff', 20); sfx(1
 function update() {
   parts = parts.filter(q => (q.x += q.vx, q.y += q.vy, q.vy += 0.15, --q.life > 0));
   if (dead) {
-    if (--dead === 0) {
-      if (fx.starve) { total = startTotal; loadLevel(lvl); toast('Back to the start of the level!'); }
-      else respawn();
-    }
+    if (--dead === 0) respawn();
     return;
   }
 
@@ -298,7 +296,7 @@ function frame(now) {
   acc += Math.min(now - last, 100); last = now;
   for (; acc >= 1000 / 60; acc -= 1000 / 60) {
     t++;
-    if (playing) { onTick(); if (!paused && !fx.frozen) update(); }
+    if (playing) { onTick(); if (!paused) update(); }
   }
   draw(); music();
   requestAnimationFrame(frame);

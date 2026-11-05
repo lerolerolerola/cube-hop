@@ -2,22 +2,24 @@ const SHAKE_ANGRY = 18;
 const STILL = 0.8;
 const HUM_LEVEL = 0.04;
 const CALM_SECONDS = 8, HUM_SECONDS = 3;
+const SNOOZE = 60, FINISH = 120, STEP = 120; // s: break comes back after 'Not now'; time to finish the level; gap between friction steps
+const FACE_DOWN = 150, FACE_UP = 120; // |beta| in degrees: flat face down is ±180, gap avoids flicker
 
 const DEFAULTS = {
   session: 15, breakEvery: 5, warn: 2, week: 120,
-  photo: true, walk: true, steps: 20, calm: true, hum: true,
+  photo: true, walk: true, steps: 20, calm: true, hum: true, rest: true, restSecs: 60,
   red: true, orange: true, yellow: true, green: true, blue: true, purple: true,
-  fade: true, sound: true, block: true, negative: true, invert: true, betray: true, freeze: true, starve: true,
+  fade: true, sound: true, streak: 10, negative: true, invert: true, betray: true,
   shakeInvert: true, dev: false,
 };
 const FORM = [
   ['Time', { session: 'Play session (min)', breakEvery: 'Activity break every (min, 0 = never)', warn: 'Start winding down (min before end)', week: 'Play time per week (min)' }],
-  ['Break activities', { photo: '📷 Find a color with the camera', walk: '🚶 Walk around', steps: 'Steps to walk', calm: '🧘 Hold still and breathe', hum: '🎤 Hum a song' }],
+  ['Break activities', { photo: '📷 Find a color with the camera', walk: '🚶 Walk around', steps: 'Steps to walk', calm: '🧘 Hold still and breathe', hum: '🎤 Hum a song', rest: '📵 Put the phone face down', restSecs: 'Seconds face down' }],
   ['Colors to find', { red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green', blue: 'Blue', purple: 'Purple' }],
   ['Winding down', { fade: 'Colors slowly fade to gray', sound: 'Music slows down, then sounds wrong in overtime' }],
-  ['If they keep playing after time is up', {
-    block: 'Pop-ups that stop the game', negative: 'Colors turn negative (after 30 s)', invert: 'Left and right swap (after 1 min)',
-    betray: 'Game ignores some jumps (after 1.5 min)', freeze: 'Screen freezes (after 2 min)', starve: 'Falling restarts the whole level',
+  ['Playing a long time without a break', {
+    streak: 'Friction starts after (min without doing a break, 0 = never)', negative: 'Colors turn negative (+2 min)',
+    invert: 'Left and right swap (+4 min)', betray: 'Game ignores some jumps (+6 min)',
   }],
   ['Frustration', { shakeInvert: 'Angry shaking swaps the controls until the child calms down' }],
   ['Testing', { dev: '🛠 Dev mode: a button to try each mechanic right away' }],
@@ -46,6 +48,9 @@ addEventListener('devicemotion', e => {
   else if (gm < 10.2) stepUp = false;
 });
 
+let beta = 0;
+addEventListener('deviceorientation', e => { if (e.beta != null) beta = e.beta; });
+
 function readMic() {
   if (!analyser) return 0;
   const wave = new Float32Array(analyser.fftSize);
@@ -55,14 +60,15 @@ function readMic() {
   return Math.sqrt(s / wave.length);
 }
 
-let used = 0, extra = 0, nextBreak = Infinity, warned = false, timeUp = false, hardStop = false;
+let used = 0, extra = 0, nextBreak = Infinity, warned = false, timeUp = false;
+let sinceBreak = 0, snoozes = 0, streakWarned = false, finishBy = 0, lateEnd = false;
 let invertUntil = 0, angry = 0, activityTick = null, lastFilter = '';
 const left = () => Math.min(S.session * 60 + extra - used, S.week * 60 - week.used);
 
 function startSession(level, cubes) {
   checkWeek();
   if (S.week * 60 - week.used <= 0) return showTitle();
-  used = extra = 0; warned = timeUp = hardStop = false; invertUntil = 0;
+  used = extra = sinceBreak = snoozes = finishBy = 0; warned = timeUp = streakWarned = lateEnd = false; invertUntil = 0;
   nextBreak = S.breakEvery > 0 ? S.breakEvery * 60 : Infinity;
   $('notches').innerHTML = '';
   for (let m = S.breakEvery; S.breakEvery > 0 && m < S.session; m += S.breakEvery)
@@ -73,28 +79,32 @@ function startSession(level, cubes) {
   loadLevel(level);
 }
 
+// Seconds past the no-break limit (negative = still fine).
+const noBreak = () => S.streak > 0 && S.breakEvery > 0 ? sinceBreak - S.streak * 60 : -1;
+
 function onTick() {
   if (activityTick) activityTick();
   if (paused) return;
-  used += 1 / 60; if (!S.dev) week.used += 1 / 60;
+  used += 1 / 60; sinceBreak += 1 / 60; if (!S.dev) week.used += 1 / 60;
   if (t % 120 === 0) put('week', week);
-  const l = left(), over = -l;
+  const l = left();
 
-  if (used >= nextBreak && l > S.warn * 60) { nextBreak += S.breakEvery * 60; return breakTime(); }
+  if (used >= nextBreak && l > S.warn * 60) { nextBreak = Infinity; return breakTime(); }
   if (!warned && l <= S.warn * 60 && l > 0) { warned = true; toast(`Almost time to stop!\nTry to finish this level`); }
-  if (!timeUp && l <= 0) { timeUp = true; if (S.block) return timesUp(); toast("Time's up! Finish this level"); }
-  if (!hardStop && S.block && over >= 150) { hardStop = true; return stopCard(); }
+  if (!timeUp && l <= 0) { timeUp = true; return timesUp(); }
+  if (finishBy && used >= finishBy) { finishBy = 0; lateEnd = true; return endSession('Time to rest!'); }
 
+  // Friction grows with play time since the last break that was done; doing a break clears it.
+  const over = noBreak();
+  if (over >= 0 && !streakWarned) { streakWarned = true; toast('You have played a long time without a break!\nDo a break to make the game normal again'); }
   const fade = S.fade && S.warn > 0 ? Math.min(1, Math.max(0, 1 - l / (S.warn * 60))) : 0;
-  const gray = devFx.gray ? 1 : fade;
-  const filter = `grayscale(${gray.toFixed(2)})` + (devFx.negative || (S.negative && over > 30) ? ' invert(1)' : '');
+  const gray = devFx.gray || over >= 0 ? 1 : fade;
+  const filter = `grayscale(${gray.toFixed(2)})` + (devFx.negative || (S.negative && over >= STEP) ? ' invert(1)' : '');
   if (filter !== lastFilter) cv.style.filter = lastFilter = filter;
-  fx.musicRate = devFx.music ? 0.65 : S.sound ? 1 - 0.35 * fade : 1;
-  fx.offKey = devFx.music || (S.sound && over > 0);
-  fx.inverted = devFx.invert || (S.invert && over > 60) || t < invertUntil;
-  fx.betray = devFx.betray || (S.betray && over > 90);
-  fx.frozen = t < devFreeze || (S.freeze && over > 120 && over < 126);
-  fx.starve = devFx.starve || (S.starve && over > 0);
+  fx.musicRate = devFx.music ? 0.65 : over >= 0 ? 0.75 : S.sound ? 1 - 0.35 * fade : 1;
+  fx.offKey = devFx.music || (S.sound && over >= STEP);
+  fx.inverted = devFx.invert || (S.invert && over >= 2 * STEP) || t < invertUntil;
+  fx.betray = devFx.betray || (S.betray && over >= 3 * STEP);
 
   angry = (keys.KeyE ? 25 : motion) > SHAKE_ANGRY ? angry + 1 : Math.max(0, angry - 1);
   if (S.shakeInvert && angry > 20 && t >= invertUntil) {
@@ -131,37 +141,35 @@ const success = msg => modal(`<h2>${msg}</h2>`, [['▶ Back to the game', closeM
 
 const card = (html, done, back) => modal(html, [['↩ Back', back, 'ghost'], ['Skip (PC test)', done, 'ghost pc']]);
 
-const ACTS = [['photo', '📷 Find a color', photo], ['walk', '🚶 Take a walk', walk], ['calm', '🧘 Breathe', calm], ['hum', '🎤 Hum a song', hum]];
+const ACTS = [['photo', '📷 Find a color', photo], ['walk', '🚶 Take a walk', walk], ['calm', '🧘 Breathe', calm], ['hum', '🎤 Hum a song', hum], ['rest', '📵 Phone nap', rest]];
 
 function breakTime() {
   const acts = ACTS.filter(([k]) => S[k]);
   if (!acts.length) return;
-  const done = () => success('Nice job! 🎉');
+  const done = () => {
+    sinceBreak = snoozes = 0; streakWarned = false;
+    nextBreak = used + S.breakEvery * 60;
+    success('Nice job! 🎉');
+  };
+  const notNow = () => { snoozes++; nextBreak = used + SNOOZE; closeModal(); };
   modal(`<h2>Break time! 🌟</h2><p>Pick something to do:</p>`, [
     ...acts.map(([, label, fn]) => [label, () => fn(done, breakTime)]),
+    ['⏭ Not now', notNow, 'ghost'],
     ["🏁 I'm done for today", () => endSession()],
   ]);
 }
 
 function timesUp() {
-  modal(`<h2>⏰ Time's up!</h2><p>Finish this level to end on a win, or stop now.<br>Your progress is saved either way.</p>`, [
-    ['▶ Finish this level', closeModal],
+  modal(`<h2>⏰ Time's up!</h2><p>You have ${FINISH / 60} minutes to finish this level, or stop now.<br>Your progress is saved either way.</p>`, [
+    ['▶ Finish this level', () => { finishBy = used + FINISH; closeModal(); }],
     ['🏁 Stop now', () => endSession()],
     ['+5 min (grown-up)', () => grownUp(addTime, timesUp), 'ghost'],
   ]);
 }
 
-function stopCard() {
-  modal(`<h2>🌙 Play time is over</h2><p>Let's stop here. Your progress is saved.</p>`, [
-    ['🏁 Save & stop', () => endSession()],
-    ['+5 min (grown-up)', () => grownUp(addTime, stopCard), 'ghost'],
-  ]);
-}
-
 function addTime() {
   extra += 300; week.used = Math.max(0, week.used - 300);
-  warned = timeUp = hardStop = false;
-  if (S.breakEvery > 0) nextBreak = used + S.breakEvery * 60;
+  warned = timeUp = false; finishBy = 0;
   closeModal();
 }
 
@@ -214,7 +222,7 @@ function settingsCard() {
 
 function showTitle() {
   closeModal(); playing = false; checkWeek();
-  Object.assign(fx, { inverted: false, betray: false, frozen: false, starve: false, musicRate: 1, offKey: false });
+  Object.assign(fx, { inverted: false, betray: false, musicRate: 1, offKey: false });
   cv.style.filter = lastFilter = '';
   $('hud').classList.add('hidden'); $('pad').classList.add('hidden'); $('title').classList.remove('hidden');
   const wl = Math.max(0, S.week * 60 - week.used), save = get('save', null);
@@ -243,6 +251,20 @@ function walk(done, back) {
     $('count').textContent = `${n} / ${S.steps}`;
     progress(n / S.steps);
     if (n >= S.steps) { activityTick = null; done(); }
+  };
+}
+
+function rest(done, back) {
+  card(`<h2>📵 Put the phone face down</h2><p id="msg">Leave it there for ${S.restSecs} seconds and do something else.<br>If you pick it up, the time starts again!</p><i class="bar"><b id="prog"></b></i>`, done, back);
+  let n = 0, down = false;
+  activityTick = () => {
+    const now = keys.KeyF || Math.abs(beta) > (down ? FACE_UP : FACE_DOWN);
+    if (now && !down) sfx(523, 0.15);
+    if (!now && down && n) { n = 0; sfx(196, 0.3, 'sawtooth'); $('msg').textContent = 'You picked it up! Put it back face down, the time starts again'; }
+    down = now;
+    if (down) n++;
+    progress(n / (S.restSecs * 60));
+    if (n >= S.restSecs * 60) { activityTick = null; sfx(784, 0.1); sfx(1047, 0.3); done(); }
   };
 }
 
@@ -299,7 +321,6 @@ function hsl(r, g, b) {
 }
 
 const devFx = {};
-let devFreeze = 0;
 function devCard() {
   const end = S.session * 60 + extra, clock = s => () => { used = s; closeModal(); };
   const toggle = (k, label) => [(devFx[k] ? '✓ ' : '') + label, () => { devFx[k] = !devFx[k]; devCard(); }, devFx[k] ? '' : 'ghost'];
@@ -309,14 +330,14 @@ function devCard() {
     ['☕ Break', () => { closeModal(); breakTime(); }],
     ['⏩ Wind down', clock(end - S.warn * 60 + 1)],
     ["⏰ Time's up", () => { timeUp = false; clock(end)(); }],
-    ...[30, 60, 90, 120, 150].map(s => [`+${s}s over`, () => { timeUp = true; hardStop = false; clock(end + s + 0.5)(); }]),
-    ['↺ Reset clock', () => { used = 0; warned = timeUp = hardStop = false; devFreeze = invertUntil = 0; for (const k in devFx) devFx[k] = false; closeModal(); }],
+    ...[0, 2, 4, 6].map(m => [`${S.streak + m} min no break`, () => { sinceBreak = (S.streak + m) * 60 + 0.5; closeModal(); }]),
+    ['↺ Reset clock', () => { used = sinceBreak = snoozes = finishBy = invertUntil = 0; warned = timeUp = streakWarned = false; for (const k in devFx) devFx[k] = false; closeModal(); }],
   ]);
   $('modal').querySelector('.btns').insertAdjacentHTML('afterend', '<p>Or switch one effect on by itself:</p><div class="btns" id="devToggles"></div>');
   for (const [label, fn, cls] of [
     toggle('gray', '🌫 Gray'), toggle('negative', '🔄 Negative'), toggle('music', '🎵 Music slow/off-key'),
-    toggle('invert', '🔀 Swap controls'), toggle('betray', '🙈 Ignore jumps'), toggle('starve', '⛔ No checkpoints'),
-    ['❄ Freeze 5 s', () => { devFreeze = t + 300; closeModal(); }, 'ghost'], ['😠 Angry shake', angryShake, 'ghost'],
+    toggle('invert', '🔀 Swap controls'), toggle('betray', '🙈 Ignore jumps'),
+    ['😠 Angry shake', angryShake, 'ghost'],
     ['🔒 Use up the week', lockWeek, 'ghost'], ['✕ Close', closeModal],
   ]) {
     const b = document.createElement('button');
