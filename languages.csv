@@ -10,7 +10,7 @@ title.noPip;NO MASCOT;SEM MASCOTE
 title.continue;:play: CONTINUE;:play: CONTINUAR
 title.newGame;NEW GAME;NOVO JOGO
 title.resetTime;:reset: RESET TIME (TEST);:reset: REPOR TEMPO (TESTE)
-title.pcHelp;:laptop: Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down;:laptop: Setas para andar · Espaço para saltar · Shift para fazer Dash · Manter E pressionado = Abanar· Manter F pressionado= telemóvel virado para baixo
+title.pcHelp;:laptop: Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down;:laptop: Setas para andar · Espaço para saltar · Shift para fazer Dash · Manter E pressionado = Abanar · Manter F pressionado = telemóvel virado para baixo
 title.grownUps;:gear: Grown-ups;:gear: Adultos
 title.rotate;Turn your phone sideways;Vira o telemóvel de lado
 title.autoLevel;:trophy: Autonomy level {n};:trophy: Nível de autonomia {n}
@@ -148,7 +148,7 @@ set.shakeInvert;Angry shaking swaps the controls until the child calms down;Aban
 form.testing;Testing;Testes
 set.dev;:dev: Dev mode: a button to try each mechanic right away;:dev: Modo dev: um botão para experimentar cada mecânica
 form.mascot;Mascot (test version);Mascote (versão de teste)
-set.mascot;Pip the mascot: break activities make him happy;Pip, a mascote: as atividades de pausa deixam-o feliz
+set.mascot;Pip the mascot: break activities make him happy;Pip, a mascote: as atividades de pausa deixam-no feliz
 dev.title;:dev: Dev mode;:dev: Modo dev
 dev.text;"Jump the clock: the real sequence plays
 (it follows the grown-up settings)";"Avançar o relógio: a sequência real acontece
@@ -188,7 +188,7 @@ pip.stillHungry;"That's ok! Pip is still a bit hungry.
 Want to try another one?";"Não faz mal! O Pip ainda tem um bocadinho de fome.
 Queres experimentar outra coisa?"
 pip.waiting;"Pip is still waiting for a break…
-Do an activity tolet him rest.";"O Pip ainda está à espera de uma pausa…
+Do an activity to let him rest.";"O Pip ainda está à espera de uma pausa…
 Faz uma atividade para ele descansar."
 pip.hungry;"Pip got hungry from all that jumping!
 Do an activity to feed it.";"O Pip ficou com fome de tanto saltar!
