@@ -4,7 +4,7 @@
 // Wraps session.js functions instead of editing them, so the base game is unchanged when the mascot is off.
 const PET = 'Pip', FULL = 5;
 DEFAULTS.mascot = false;
-FORM.splice(FORM.length - 1, 0, ['Mascot (test version)', { mascot: `${PET} the mascot: break activities feed it` }]);
+FORM.splice(FORM.length - 1, 0, ['form.mascot', ['mascot']]);
 if (/[?&]mascot\b/.test(location.search)) S.mascot = true;
 
 let pet = { food: 3, ...get('pet', {}) }, step = -1;
@@ -65,43 +65,36 @@ const wrap = (name, fn) => { const orig = window[name]; window[name] = (...a) =>
 // Activities: done = feed, back = no food (but no scolding either).
 const showBreak = line => { _breakTime(); say(line); };
 const _breakTime = breakTime;
-// Activities are framed as things you do with Pip: [button label, card title rewrite].
-const WITH_PIP = {
-  photo: [':camera: Show Pip a color', h => h.replace('Find something', `Show ${PET} something`)],
-  walk: [':walk: Take Pip for a walk', h => h.replace(/Walk (\d+) steps/, `Take ${PET} for a walk<br>$1 steps`)],
-  calm: [':breathe: Breathe with Pip', () => `:breathe: Hold ${PET} still<br>and breathe together`],
-  hum: [':hum: Sing to Pip', () => `:hum: Hum a song to ${PET}`],
-  rest: [':phone: Put Pip to bed', () => `:phone: Put ${PET} to bed:<br>phone face down`],
-};
+// Activities are framed as things you do with Pip: button 'pip.act.<name>', card title 'pip.<name>'.
 ACTS.forEach(a => {
-  const [k, label, f] = a, [pipLabel, title] = WITH_PIP[k] || [label, h => h];
-  Object.defineProperty(a, 1, { get: () => S.mascot ? pipLabel : label });
+  const [k, label, f] = a;
+  Object.defineProperty(a, 1, { get: () => S.mascot ? 'pip.act.' + k : label });
   a[2] = (done, back) => {
     if (!S.mascot) return f(done, back);
     f(() => {
       done(); feed(2);
-      say(pet.food >= FULL ? `Yum! ${PET} is full and happy!` : `Yum! Thank you for feeding ${PET}!`, 'happy');
-    }, () => showBreak(`That's ok! ${PET} is still a bit hungry.<br>Want to try another one?`));
+      say(tr(pet.food >= FULL ? 'pip.full' : 'pip.thanks'), 'happy');
+    }, () => showBreak(tr('pip.stillHungry')));
     const h2 = $('modal').querySelector('h2');
-    h2.innerHTML = icons(title(h2.innerHTML));
+    h2.innerHTML = icons(tr('pip.' + k, { color: h2.querySelector('b')?.outerHTML, steps: S.steps }));
   };
 });
 
 wrap('breakTime', () => {
   if (!ACTS.some(([k]) => S[k])) return;
   if (!snoozes) feed(-1); // only when the break is due, not each time it comes back after 'Not now'
-  showBreak(snoozes ? `${PET} is still waiting for a break…<br>Do an activity to feed it.` : `${PET} got hungry from all that jumping!<br>Do an activity to feed it.`);
+  showBreak(tr(snoozes ? 'pip.waiting' : 'pip.hungry'));
 });
 
-wrap('calm', (orig, done, back) => orig(() => { done(); feed(1); say(`${PET} feels calm too :smile:`, 'happy'); }, back));
+wrap('calm', (orig, done, back) => orig(() => { done(); feed(1); say(tr('pip.calmToo'), 'happy'); }, back));
 
-wrap('timesUp', orig => { orig(); say(`${PET} is getting sleepy.<br>Let's finish this level and rest!`, 'sleep'); });
+wrap('timesUp', orig => { orig(); say(tr('pip.sleepy'), 'sleep'); });
 
 wrap('endSession', (orig, msg, saved) => {
   const late = lateEnd;
   orig(msg, saved);
   if (!late) feed(1);
-  say(late ? `${PET} is going to sleep. Next time, let's stop a bit earlier!` : `Thank you for stopping on time! ${PET} is going to sleep :moon:`, 'sleep');
+  say(tr(late ? 'pip.lateSleep' : 'pip.onTime'), 'sleep');
 });
 
 wrap('onTick', orig => {
@@ -123,7 +116,7 @@ const _showTitle = showTitle;
 window.showTitle = () => {
   _showTitle(); petHud();
   $('withPip').className = S.mascot ? '' : 'ghost';
-  $('withPip').innerHTML = petSVG('happy', 18) + ' WITH PIP';
+  $('withPip').innerHTML = petSVG('happy', 18) + ' ' + tr('title.withPip');
   $('noPip').className = S.mascot ? 'ghost' : '';
 };
 showTitle();

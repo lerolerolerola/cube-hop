@@ -1,7 +1,5 @@
 const LEVELS = [
   {
-    name: '1 · VILLAGE',
-    hint: 'D-PAD to walk · A to jump',
     sky: ['#7fd6ff', '#ffe3f1'],
     cloud: '#ffffffcc',
     far: '#a9dcec',
@@ -24,8 +22,6 @@ const LEVELS = [
     ],
   },
   {
-    name: '2 · SUNSET TOWERS',
-    hint: 'Press A again in the air\nfor a DOUBLE JUMP!',
     sky: ['#ff9a8b', '#ffd88a'],
     cloud: '#ffffffaa',
     far: '#f0a39a',
@@ -48,8 +44,6 @@ const LEVELS = [
     ],
   },
   {
-    name: '3 · NIGHT RUINS',
-    hint: 'Press B to DASH\nJump, then dash over big gaps!',
     sky: ['#1b1f4b', '#3e6a8a'],
     cloud: '#ffffff22',
     far: '#2b3c6b',
@@ -73,8 +67,6 @@ const LEVELS = [
     ],
   },
   {
-    name: '4 · SKY FORTRESS',
-    hint: 'Final level!\nUse everything you learned',
     sky: ['#c3a6ff', '#ffd6a5'],
     cloud: '#ffffffbb',
     far: '#b19be0',

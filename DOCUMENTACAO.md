@@ -204,7 +204,18 @@ Protegido por uma conta de multiplicar. Tudo é guardado só no próprio telemó
 
 ---
 
-## 9. Privacidade
+## 9. Línguas (CSV)
+
+Todo o texto do jogo (botões, cartões, mensagens, nomes dos níveis, definições, falas do Pip) está separado do código, em `languages.csv`: uma linha por texto, uma coluna por língua (`key,en,pt`). O jogo usa a língua do telemóvel se existir no ficheiro, senão inglês. Para testar outra língua: `.../cube-hop/?lang=pt`.
+
+Isto é só para quem desenvolve o jogo (não há opção no painel dos adultos):
+- Editar `languages.csv` no Excel / Google Sheets e gravar como **CSV UTF-8** (`;` também funciona). Para uma língua nova, acrescentar uma coluna (ex. `fr`). Células vazias usam o inglês.
+- Não mexer na coluna `key`. `{nome}` é preenchido pelo jogo (ex. `{min}`), `:nome:` é um ícone (ex. `:play:`), uma quebra de linha na célula é uma quebra de linha no jogo.
+- `node lang.test.js` confirma que não falta nenhum texto. Depois, subir o `?v=` em `index.html`.
+
+---
+
+## 10. Privacidade
 
 - Nada é enviado para lado nenhum. Não há contas, servidores nem analítica.
 - Câmara e microfone só são usados **durante** a atividade correspondente e desligam-se logo a seguir. As imagens são analisadas no telemóvel e não são guardadas.
@@ -212,7 +223,7 @@ Protegido por uma conta de multiplicar. Tudo é guardado só no próprio telemó
 
 ---
 
-## 10. Para quem quer mexer no código
+## 11. Para quem quer mexer no código
 
 HTML/CSS/JavaScript sem dependências nem build. Basta abrir `index.html` através de um servidor local:
 
@@ -226,12 +237,14 @@ e ir a `http://localhost:8000/?dev`. Para testar sensores no telemóvel é preci
 |---|---|
 | `index.html` | Estrutura: canvas, HUD, comandos, ecrã inicial |
 | `style.css` | Aspeto de tudo o que não é o canvas (cartões, botões, barra de autonomia) |
+| `languages.csv` | Todo o texto do jogo, uma coluna por língua (ver secção 9) |
+| `lang.js` | Lê o CSV; `tr('chave')` devolve o texto na língua do jogo |
 | `levels.js` | Os 4 níveis em texto (`#` chão, `B` tijolo, `o` cubo, `^` espinhos, `E` inimigo, `F` checkpoint, `D` porta, `P` início) |
 | `game.js` | Motor do jogo: física, desenho, som, comandos |
 | `session.js` | Tudo o que é sessão: tempo, pausas, atividades, fricção, painel dos adultos, modo dev |
 | `mascot.js` | Versão com mascote. Envolve funções do `session.js` sem as alterar; com a mascote desligada o jogo é igual à versão base |
 | `gdevelop/` | Exportação dos níveis para um projeto GDevelop (só design de níveis) |
 
-**Adicionar uma atividade de pausa:** criar uma função `nome(done, back)` em `session.js` (ver `rest` ou `calm` como exemplo), juntá-la a `ACTS` e acrescentar a opção em `DEFAULTS` e `FORM`.
+**Adicionar uma atividade de pausa:** criar uma função `nome(done, back)` em `session.js` (ver `rest` ou `calm` como exemplo), juntá-la a `ACTS` e acrescentar a opção em `DEFAULTS` e `FORM`, e os textos novos em `languages.csv`.
 
 Depois de alterar ficheiros, subir o número `?v=` em `index.html` para os telemóveis carregarem a versão nova.

@@ -1,0 +1,201 @@
+﻿key,en,pt
+hud.pause,Pause,Pausa
+hud.lv,LV {n},NV {n}
+hud.autonomy,Autonomy,Autonomia
+hud.dev,Dev mode,Modo dev
+hud.calm,Calm down,Acalmar
+hud.sound,Sound,Som
+title.withPip,WITH PIP,COM O PIP
+title.noPip,NO MASCOT,SEM MASCOTE
+title.continue,:play: CONTINUE,:play: CONTINUAR
+title.newGame,NEW GAME,NOVO JOGO
+title.resetTime,:reset: RESET TIME (TEST),:reset: REPOR TEMPO (TESTE)
+title.pcHelp,:laptop: Arrows walk · Space jump · Shift dash · hold E = angry shake · hold F = phone face down,:laptop: Setas andar · Espaço saltar · Shift dash · manter E = abanar zangado · manter F = telemóvel virado para baixo
+title.grownUps,:gear: Grown-ups,:gear: Adultos
+title.rotate,Turn your phone sideways,Vira o telemóvel de lado
+title.autoLevel,:trophy: Autonomy level {n},:trophy: Nível de autonomia {n}
+title.leftToday,Play time left today: {min} min,Tempo de jogo que resta hoje: {min} min
+title.dayUsed,Today's play time is used up. See you tomorrow! :moon:,O tempo de jogo de hoje acabou. Até amanhã! :moon:
+title.weekUsed,This week's play time is used up. It comes back on Monday! :moon:,O tempo de jogo desta semana acabou. Volta na segunda-feira! :moon:
+level1.name,1 · VILLAGE,1 · ALDEIA
+level1.hint,D-PAD to walk · A to jump,D-PAD para andar · A para saltar
+level2.name,2 · SUNSET TOWERS,2 · TORRES DO PÔR DO SOL
+level2.hint,"Press A again in the air
+for a DOUBLE JUMP!","Carrega em A outra vez no ar
+para um SALTO DUPLO!"
+level3.name,3 · NIGHT RUINS,3 · RUÍNAS DA NOITE
+level3.hint,"Press B to DASH
+Jump, then dash over big gaps!","Carrega em B para o DASH
+Salta e faz dash sobre buracos grandes!"
+level4.name,4 · SKY FORTRESS,4 · FORTALEZA DO CÉU
+level4.hint,"Final level!
+Use everything you learned","Último nível!
+Usa tudo o que aprendeste"
+game.checkpoint,Checkpoint!,Checkpoint!
+auto.gain,+{n} autonomy,+{n} autonomia
+auto.levelUp,:trophy: Autonomy level {n}!,:trophy: Nível de autonomia {n}!
+toast.almost,"Almost time to stop!
+Try to finish this level","Está quase na hora de parar!
+Tenta acabar este nível"
+toast.streak,"You have played a long time without a break!
+Do a break to make the game normal again","Estás a jogar há muito tempo sem pausa!
+Faz uma pausa para o jogo voltar ao normal"
+toast.shake,"Shaking scrambled the controls!
+Tap :breathe: to calm down","Abanar baralhou os controlos!
+Toca em :breathe: para te acalmares"
+btn.back,:back: Back,:back: Voltar
+btn.skip,Skip (PC test),Saltar (teste PC)
+btn.backToGame,:play: Back to the game,:play: Voltar ao jogo
+btn.notNow,:skip: Not now,:skip: Agora não
+btn.doneToday,:flag: I'm done for today,:flag: Por hoje chega
+btn.finishLevel,:play: Finish this level,:play: Acabar este nível
+btn.stopNow,:flag: Stop now,:flag: Parar agora
+btn.plus5,+5 min (grown-up),+5 min (adulto)
+btn.playAgain,:play: Play again,:play: Jogar outra vez
+btn.nextLevel,:play: Next level,:play: Próximo nível
+btn.stopHere,:flag: Stop here,:flag: Parar aqui
+btn.home,:home: Home,:home: Início
+btn.ok,OK,OK
+btn.cancel,Cancel,Cancelar
+btn.save,Save,Guardar
+btn.resetAuto,Reset autonomy level,Repor o nível de autonomia
+btn.resetWeekTime,Reset this week's time,Repor o tempo desta semana
+btn.resume,:play: Resume,:play: Continuar
+btn.stopPlaying,:flag: Stop playing,:flag: Parar de jogar
+btn.snap,:camera: SNAP,:camera: FOTO
+btn.close,:close: Close,:close: Fechar
+act.photo,:camera: Find a color,:camera: Encontrar uma cor
+act.walk,:walk: Take a walk,:walk: Dar uma volta
+act.calm,:breathe: Breathe,:breathe: Respirar
+act.hum,:hum: Hum a song,:hum: Cantarolar
+act.rest,:phone: Phone nap,:phone: Sesta do telemóvel
+break.title,Break time! :star:,Hora da pausa! :star:
+break.pick,Pick something to do:,Escolhe o que fazer:
+break.done,Nice job! :party:,Muito bem! :party:
+calm.title,":breathe: Hold the phone still
+and breathe slowly",":breathe: Segura o telemóvel quieto
+e respira devagar"
+calm.in,Breathe in…,Inspira…
+calm.out,Breathe out…,Expira…
+calm.fixed,Controls are back to normal :smile:,Os controlos voltaram ao normal :smile:
+walk.title,:walk: Walk {steps} steps,:walk: Dá {steps} passos
+walk.text,Hold the phone and walk around the room,Segura o telemóvel e anda pela sala
+rest.title,:phone: Put the phone face down,:phone: Pousa o telemóvel virado para baixo
+rest.text,"Leave it there for {s} seconds and do something else.
+If you pick it up, the time starts again!","Deixa-o lá durante {s} segundos e faz outra coisa.
+Se lhe pegares, o tempo começa outra vez!"
+rest.picked,"You picked it up! Put it back face down, the time starts again","Pegaste nele! Volta a pousá-lo virado para baixo, o tempo começa outra vez"
+hum.title,:hum: Hum your favorite song,:hum: Cantarola a tua música preferida
+hum.text,Keep humming until the bar is full,Continua a cantarolar até a barra encher
+hum.noMic,"Microphone not available, try another activity","Microfone indisponível, experimenta outra atividade"
+photo.title,:camera: Find something {color},:camera: Encontra algo {color}
+photo.text,Fill the square with it and press SNAP,Enche o quadrado com essa cor e carrega em FOTO
+photo.noCam,"Camera not available, try another activity","Câmara indisponível, experimenta outra atividade"
+photo.miss,"Hmm, I don't see {color} yet. Get closer and try again!","Hmm, ainda não vejo {color}. Aproxima-te e tenta outra vez!"
+color.red,Red,Vermelho
+color.orange,Orange,Laranja
+color.yellow,Yellow,Amarelo
+color.green,Green,Verde
+color.blue,Blue,Azul
+color.purple,Purple,Roxo
+timesUp.title,:clock: Time's up!,:clock: Acabou o tempo!
+timesUp.text,"You have {min} minutes to finish this level, or stop now.
+Your progress is saved either way.","Tens {min} minutos para acabar este nível, ou para agora.
+O teu progresso fica guardado na mesma."
+level.done,:star: Level complete!,:star: Nível completo!
+level.allDone,:trophy: You finished every level!,:trophy: Acabaste todos os níveis!
+level.saved,:gem: {total} cubes · progress saved,:gem: {total} cubos · progresso guardado
+end.great,Great playing!,Jogaste muito bem!
+end.justInTime,You finished just in time!,Acabaste mesmo a tempo!
+end.rest,Time to rest!,Hora de descansar!
+end.weekUsed,This week is used up,A semana está gasta
+end.text,"You played {min} min today and have :gem: {total} cubes.
+Your progress is saved, see you next time!","Jogaste {min} min hoje e tens :gem: {total} cubos.
+O teu progresso está guardado, até à próxima!"
+end.tell,:chat: Tell a grown-up what you did today,:chat: Conta a um adulto o que fizeste hoje
+pause.title,:pause: Paused,:pause: Em pausa
+gate.title,For grown-ups,Para adultos
+gate.question,What is {a} × {b}?,Quanto é {a} × {b}?
+gate.wrong,"Not quite, try again!","Não é bem isso, tenta outra vez!"
+settings.title,:gear: Grown-up settings,:gear: Definições para adultos
+settings.info,"Played this week: {used} of {total} min
+Autonomy: level {lv} ({pts} points)","Jogado esta semana: {used} de {total} min
+Autonomia: nível {lv} ({pts} pontos)"
+form.time,Time,Tempo
+set.session,Play session (min),Sessão de jogo (min)
+set.breakEvery,"Activity break every (min, 0 = never)","Pausa com atividade a cada (min, 0 = nunca)"
+set.warn,Start winding down (min before end),Começar a abrandar (min antes do fim)
+set.week,Play time per week (min),Tempo de jogo por semana (min)
+form.acts,Break activities,Atividades de pausa
+set.photo,:camera: Find a color with the camera,:camera: Encontrar uma cor com a câmara
+set.walk,:walk: Walk around,:walk: Andar
+set.steps,Steps to walk,Passos a dar
+set.calm,:breathe: Hold still and breathe,:breathe: Ficar quieto e respirar
+set.hum,:hum: Hum a song,:hum: Cantarolar uma música
+set.rest,:phone: Put the phone face down,:phone: Pousar o telemóvel virado para baixo
+set.restSecs,Seconds face down,Segundos virado para baixo
+form.colors,Colors to find,Cores a encontrar
+form.fade,Winding down,Abrandar
+set.fade,Colors slowly fade to gray,As cores vão ficando cinzentas
+set.sound,"Music slows down, then sounds wrong in overtime",A música abranda e depois desafina no tempo extra
+form.streak,Playing a long time without a break,Jogar muito tempo sem pausa
+set.streak,"Friction starts after (min without doing a break, 0 = never)","A fricção começa após (min sem fazer pausa, 0 = nunca)"
+set.negative,Colors turn negative (+2 min),As cores ficam em negativo (+2 min)
+set.invert,Left and right swap (+4 min),Esquerda e direita trocam (+4 min)
+set.betray,Game ignores some jumps (+6 min),O jogo ignora alguns saltos (+6 min)
+form.frustration,Frustration,Frustração
+set.shakeInvert,Angry shaking swaps the controls until the child calms down,Abanar com raiva troca os controlos até a criança se acalmar
+form.testing,Testing,Testes
+set.dev,:dev: Dev mode: a button to try each mechanic right away,:dev: Modo dev: um botão para experimentar cada mecânica logo
+form.mascot,Mascot (test version),Mascote (versão de teste)
+set.mascot,Pip the mascot: break activities feed it,"Pip, a mascote: as atividades de pausa alimentam-no"
+dev.title,:dev: Dev mode,:dev: Modo dev
+dev.text,"Jump the clock: the real sequence plays
+(it follows the grown-up settings)","Avançar o relógio: a sequência real acontece
+(segue as definições dos adultos)"
+dev.break,:coffee: Break,:coffee: Pausa
+dev.wind,:hourglass: Wind down,:hourglass: Abrandar
+dev.timeUp,:clock: Time's up,:clock: Fim do tempo
+dev.noBreak,{min} min no break,{min} min sem pausa
+dev.reset,:reset: Reset clock,:reset: Repor relógio
+dev.one,Or switch one effect on by itself:,Ou liga só um efeito:
+dev.gray,:gray: Gray,:gray: Cinzento
+dev.negative,:negative: Negative,:negative: Negativo
+dev.music,:slow: Music slow/off-key,:slow: Música lenta/desafinada
+dev.invert,:swap: Swap controls,:swap: Trocar controlos
+dev.betray,:blind: Ignore jumps,:blind: Ignorar saltos
+dev.angry,:angry: Angry shake,:angry: Abanar zangado
+dev.lockWeek,:lock: Use up the week,:lock: Gastar a semana
+pip.act.photo,:camera: Show Pip a color,:camera: Mostrar uma cor ao Pip
+pip.act.walk,:walk: Take Pip for a walk,:walk: Levar o Pip a passear
+pip.act.calm,:breathe: Breathe with Pip,:breathe: Respirar com o Pip
+pip.act.hum,:hum: Sing to Pip,:hum: Cantar para o Pip
+pip.act.rest,:phone: Put Pip to bed,:phone: Pôr o Pip a dormir
+pip.photo,:camera: Show Pip something {color},:camera: Mostra ao Pip algo {color}
+pip.walk,":walk: Take Pip for a walk
+{steps} steps",":walk: Leva o Pip a passear
+{steps} passos"
+pip.calm,":breathe: Hold Pip still
+and breathe together",":breathe: Segura o Pip quieto
+e respirem juntos"
+pip.hum,:hum: Hum a song to Pip,:hum: Cantarola uma música ao Pip
+pip.rest,":phone: Put Pip to bed:
+phone face down",":phone: Põe o Pip a dormir:
+telemóvel virado para baixo"
+pip.full,Yum! Pip is full and happy!,Nham! O Pip está cheio e feliz!
+pip.thanks,Yum! Thank you for feeding Pip!,Nham! Obrigado por dares de comer ao Pip!
+pip.stillHungry,"That's ok! Pip is still a bit hungry.
+Want to try another one?","Não faz mal! O Pip ainda tem um bocadinho de fome.
+Queres experimentar outra?"
+pip.waiting,"Pip is still waiting for a break…
+Do an activity to feed it.","O Pip ainda está à espera de uma pausa…
+Faz uma atividade para o alimentar."
+pip.hungry,"Pip got hungry from all that jumping!
+Do an activity to feed it.","O Pip ficou com fome de tanto saltar!
+Faz uma atividade para o alimentar."
+pip.calmToo,Pip feels calm too :smile:,O Pip também está calmo :smile:
+pip.sleepy,"Pip is getting sleepy.
+Let's finish this level and rest!","O Pip está a ficar com sono.
+Vamos acabar este nível e descansar!"
+pip.lateSleep,"Pip is going to sleep. Next time, let's stop a bit earlier!","O Pip vai dormir. Para a próxima, paramos um bocadinho mais cedo!"
+pip.onTime,Thank you for stopping on time! Pip is going to sleep :moon:,Obrigado por parares a tempo! O Pip vai dormir :moon:

@@ -53,6 +53,10 @@ Dev mode doesn't use up the weekly play time.
 
 **Weekly time:** play time is counted per week. When it's used up, the game is locked until Monday (a grown-up can reset it).
 
+## Languages
+
+All game text lives in `languages.csv` (`key,en,pt,…`, one column per language), separate from the code. Edit it in Excel / Google Sheets (save as CSV UTF-8); add a column for a new language, empty cells fall back to English. The game uses the phone's language if the file has it; `?lang=pt` forces one. `node lang.test.js` checks no text is missing.
+
 Everything is saved on the device only. Nothing is sent anywhere.
 
 **Mascot version (test):** pick 🐻 WITH PIP or NO MASCOT on the title screen (or open with `?mascot`). Activities become things you do with Pip (take Pip for a walk, put Pip to bed…). Pip gets hungry while you play; break activities and stopping on time feed it, playing a long time without a break makes it hungry. It never gets hungry while the game is closed. Code in `mascot.js`, the base game is unchanged when it's off.

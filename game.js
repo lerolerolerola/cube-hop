@@ -88,8 +88,8 @@ function loadLevel(i) {
     if (c === 'P' || c === 'E') row[x] = ' ';
   }));
   respawn();
-  $('level').textContent = LEVELS[i].name;
-  if (playing) toast(LEVELS[i].hint);
+  $('level').textContent = txt(`level${i + 1}.name`);
+  if (playing) toast(tr(`level${i + 1}.hint`));
 }
 
 function respawn() {
@@ -179,7 +179,7 @@ function update() {
   for (const [x, y] of cells(p)) {
     const c = tile(x, y);
     if (c === 'o') { map[y][x] = ' '; total++; burst(x * T + 8, y * T + 8, '#ffd84a', 10); sfx(988, 0.08); sfx(1319, 0.15); }
-    if (c === 'F') { map[y][x] = 'f'; spawn = { x: x * T + 3, y: y * T + 2 }; sfx(660, 0.1); sfx(880, 0.2); toast('Checkpoint!'); }
+    if (c === 'F') { map[y][x] = 'f'; spawn = { x: x * T + 3, y: y * T + 2 }; sfx(660, 0.1); sfx(880, 0.2); toast(tr('game.checkpoint')); }
     if (c === '^' && p.y + p.h > y * T + 9) return die();
     if (c === 'D') { sfx(523, 0.1); sfx(784, 0.3); return onLevelDone(); }
   }

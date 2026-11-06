@@ -12,17 +12,15 @@ const DEFAULTS = {
   fade: true, sound: true, streak: 10, negative: true, invert: true, betray: true,
   shakeInvert: true, dev: false,
 };
+// [heading key, settings]; each setting's label is 'set.<name>' in languages.csv (colors use 'color.<name>').
 const FORM = [
-  ['Time', { session: 'Play session (min)', breakEvery: 'Activity break every (min, 0 = never)', warn: 'Start winding down (min before end)', week: 'Play time per week (min)' }],
-  ['Break activities', { photo: ':camera: Find a color with the camera', walk: ':walk: Walk around', steps: 'Steps to walk', calm: ':breathe: Hold still and breathe', hum: ':hum: Hum a song', rest: ':phone: Put the phone face down', restSecs: 'Seconds face down' }],
-  ['Colors to find', { red: 'Red', orange: 'Orange', yellow: 'Yellow', green: 'Green', blue: 'Blue', purple: 'Purple' }],
-  ['Winding down', { fade: 'Colors slowly fade to gray', sound: 'Music slows down, then sounds wrong in overtime' }],
-  ['Playing a long time without a break', {
-    streak: 'Friction starts after (min without doing a break, 0 = never)', negative: 'Colors turn negative (+2 min)',
-    invert: 'Left and right swap (+4 min)', betray: 'Game ignores some jumps (+6 min)',
-  }],
-  ['Frustration', { shakeInvert: 'Angry shaking swaps the controls until the child calms down' }],
-  ['Testing', { dev: ':dev: Dev mode: a button to try each mechanic right away' }],
+  ['form.time', ['session', 'breakEvery', 'warn', 'week']],
+  ['form.acts', ['photo', 'walk', 'steps', 'calm', 'hum', 'rest', 'restSecs']],
+  ['form.colors', ['red', 'orange', 'yellow', 'green', 'blue', 'purple']],
+  ['form.fade', ['fade', 'sound']],
+  ['form.streak', ['streak', 'negative', 'invert', 'betray']],
+  ['form.frustration', ['shakeInvert']],
+  ['form.testing', ['dev']],
 ];
 const COLORS = { red: [0, '#e63946'], orange: [28, '#f4a261'], yellow: [55, '#ffd84a'], green: [125, '#6fd17c'], blue: [215, '#4a90e2'], purple: [275, '#b28dff'] };
 
@@ -49,12 +47,12 @@ const dayLeft = () => (checkDay(), S.session * 60 + day.extra - day.used);
 let auto = { pts: 0, ...get('auto', {}) };
 const need = n => 10 + 5 * n; // points to go from level n+1 to n+2
 function autoLevel() { let n = 0, p = auto.pts; while (p >= need(n)) p -= need(n++); return [n + 1, p / need(n)]; }
-function autoHud() { const [lv, f] = autoLevel(); $('autoLv').textContent = 'LV ' + lv; $('timeFill').style.width = f * 100 + '%'; }
+function autoHud() { const [lv, f] = autoLevel(); $('autoLv').textContent = txt('hud.lv', { n: lv }); $('timeFill').style.width = f * 100 + '%'; }
 // Adds points and returns the line to show on the card.
 function gain(n) {
   const [before] = autoLevel(); auto.pts += n; put('auto', auto); autoHud();
   const [lv] = autoLevel();
-  return `<p class="gain">+${n} autonomy${lv > before ? `<br>:trophy: Autonomy level ${lv}!` : ''}</p>`;
+  return `<p class="gain">${tr('auto.gain', { n })}${lv > before ? '<br>' + tr('auto.levelUp', { n: lv }) : ''}</p>`;
 }
 
 let motion = 0, steps = 0, stepUp = false, lastStep = 0, analyser = null, stream = null;
@@ -107,13 +105,13 @@ function onTick() {
   const l = left();
 
   if (used >= nextBreak && l > S.warn * 60) { nextBreak = Infinity; return breakTime(); }
-  if (!warned && l <= S.warn * 60 && l > 0) { warned = true; toast(`Almost time to stop!\nTry to finish this level`); }
+  if (!warned && l <= S.warn * 60 && l > 0) { warned = true; toast(tr('toast.almost')); }
   if (!timeUp && l <= 0) { timeUp = true; return timesUp(); }
-  if (finishBy && used >= finishBy) { finishBy = 0; lateEnd = true; return endSession('Time to rest!'); }
+  if (finishBy && used >= finishBy) { finishBy = 0; lateEnd = true; return endSession('end.rest'); }
 
   // Friction grows with play time since the last break that was done; doing a break clears it.
   const over = noBreak();
-  if (over >= 0 && !streakWarned) { streakWarned = true; toast('You have played a long time without a break!\nDo a break to make the game normal again'); }
+  if (over >= 0 && !streakWarned) { streakWarned = true; toast(tr('toast.streak')); }
   const fade = S.fade && S.warn > 0 ? Math.min(1, Math.max(0, 1 - l / (S.warn * 60))) : 0;
   const gray = devFx.gray || over >= 0 ? 1 : fade;
   const filter = `grayscale(${gray.toFixed(2)})` + (devFx.negative || (S.negative && over >= STEP) ? ' invert(1)' : '');
@@ -126,7 +124,7 @@ function onTick() {
   angry = (keys.KeyE ? 25 : motion) > SHAKE_ANGRY ? angry + 1 : Math.max(0, angry - 1);
   if (S.shakeInvert && angry > 20 && t >= invertUntil) {
     angry = 0; invertUntil = t + 30 * 60; sfx(150, 0.5, 'sawtooth');
-    toast('Shaking scrambled the controls!\nTap :breathe: to calm down');
+    toast(tr('toast.shake'));
   }
   $('calmBtn').classList.toggle('hidden', t >= invertUntil);
 
@@ -144,7 +142,7 @@ function modal(html, buttons = []) {
     const b = document.createElement('button');
     b.innerHTML = icons(label); b.className = cls || '';
     onPress(b, () => fn());
-    m.querySelector('.btns').append(b);
+    m.querySelector('.card > .btns:last-child').append(b);
   }
   m.classList.remove('hidden');
   return cardId;
@@ -154,9 +152,9 @@ function stopMedia() { cardId++; stream?.getTracks().forEach(k => k.stop()); str
 const progress = f => { const b = $('prog'); if (b) b.style.width = Math.min(100, f * 100) + '%'; };
 const pick = a => a[Math.random() * a.length | 0];
 
-const card = (html, done, back) => modal(html, [[':back: Back', back, 'ghost'], ['Skip (PC test)', done, 'ghost pc']]);
+const card = (html, done, back) => modal(html, [[tr('btn.back'), back, 'ghost'], [tr('btn.skip'), done, 'ghost pc']]);
 
-const ACTS = [['photo', ':camera: Find a color', photo], ['walk', ':walk: Take a walk', walk], ['calm', ':breathe: Breathe', calm], ['hum', ':hum: Hum a song', hum], ['rest', ':phone: Phone nap', rest]];
+const ACTS = [['photo', 'act.photo', photo], ['walk', 'act.walk', walk], ['calm', 'act.calm', calm], ['hum', 'act.hum', hum], ['rest', 'act.rest', rest]]; // [setting, label key, card]
 
 function breakTime() {
   const acts = ACTS.filter(([k]) => S[k]);
@@ -165,21 +163,21 @@ function breakTime() {
     const g = gain(snoozes ? 2 : 3); // a bit more when the break is taken right away
     sinceBreak = snoozes = 0; streakWarned = false;
     nextBreak = used + S.breakEvery * 60;
-    modal(`<h2>Nice job! :party:</h2>${g}`, [[':play: Back to the game', closeModal]]);
+    modal(`<h2>${tr('break.done')}</h2>${g}`, [[tr('btn.backToGame'), closeModal]]);
   };
   const notNow = () => { snoozes++; nextBreak = used + SNOOZE; closeModal(); };
-  modal(`<h2>Break time! :star:</h2><p>Pick something to do:</p>`, [
-    ...acts.map(([, label, fn]) => [label, () => fn(done, breakTime)]),
-    [':skip: Not now', notNow, 'ghost'],
-    [":flag: I'm done for today", () => endSession()],
+  modal(`<h2>${tr('break.title')}</h2><p>${tr('break.pick')}</p>`, [
+    ...acts.map(([, label, fn]) => [tr(label), () => fn(done, breakTime)]),
+    [tr('btn.notNow'), notNow, 'ghost'],
+    [tr('btn.doneToday'), () => endSession()],
   ]);
 }
 
 function timesUp() {
-  modal(`<h2>:clock: Time's up!</h2><p>You have ${FINISH / 60} minutes to finish this level, or stop now.<br>Your progress is saved either way.</p>`, [
-    [':play: Finish this level', () => { finishBy = used + FINISH; closeModal(); }],
-    [':flag: Stop now', () => endSession()],
-    ['+5 min (grown-up)', () => grownUp(addTime, timesUp), 'ghost'],
+  modal(`<h2>${tr('timesUp.title')}</h2><p>${tr('timesUp.text', { min: FINISH / 60 })}</p>`, [
+    [tr('btn.finishLevel'), () => { finishBy = used + FINISH; closeModal(); }],
+    [tr('btn.stopNow'), () => endSession()],
+    [tr('btn.plus5'), () => grownUp(addTime, timesUp), 'ghost'],
   ]);
 }
 
@@ -192,50 +190,52 @@ function addTime() {
 function onLevelDone() {
   const next = (lvl + 1) % LEVELS.length, last = next === 0;
   put('save', { lvl: next, total });
-  if (timeUp) return endSession('You finished just in time!', true);
-  modal(`<h2>${last ? ':trophy: You finished every level!' : ':star: Level complete!'}</h2><p>:gem: ${total} cubes · progress saved</p>`, [
-    [last ? ':play: Play again' : ':play: Next level', () => { loadLevel(next); closeModal(); }],
-    [':flag: Stop here', () => endSession('Great playing!', true)],
+  if (timeUp) return endSession('end.justInTime', true);
+  modal(`<h2>${tr(last ? 'level.allDone' : 'level.done')}</h2><p>${tr('level.saved', { total })}</p>`, [
+    [tr(last ? 'btn.playAgain' : 'btn.nextLevel'), () => { loadLevel(next); closeModal(); }],
+    [tr('btn.stopHere'), () => endSession('end.great', true)],
   ]);
 }
 
-function endSession(msg = 'Great playing!', saved = false) {
+function endSession(msg = 'end.great', saved = false) { // msg: key in languages.csv
   if (!saved) { total = startTotal; put('save', { lvl, total }); }
   put('week', week); saveDay();
   const mins = Math.max(1, Math.round(used / 60));
   // Stopping on time = autonomy; stopping before the time is up = a bit more. Forced end = nothing.
   const g = lateEnd ? '' : gain(timeUp ? 4 : 5);
-  modal(`<h2>${msg} :star:</h2>${g}<p>You played ${mins} min today and have :gem: ${total} cubes.<br>Your progress is saved, see you next time!</p><p>:chat: Tell a grown-up what you did today</p>`,
-    [[':home: Home', showTitle]]);
+  modal(`<h2>${tr(msg)} :star:</h2>${g}<p>${tr('end.text', { min: mins, total })}</p><p>${tr('end.tell')}</p>`,
+    [[tr('btn.home'), showTitle]]);
   playing = false;
 }
 
 function grownUp(then, back, note = '') {
   const a = 6 + pick([0, 1, 2, 3, 4, 5, 6]), b = 3 + pick([0, 1, 2, 3, 4, 5, 6]);
-  modal(`<h2>For grown-ups</h2>${note}<p>What is ${a} × ${b}?</p><input id="gate" type="number" inputmode="numeric">`, [
-    ['OK', () => (+$('gate').value === a * b ? then() : grownUp(then, back, '<p>Not quite, try again!</p>'))],
-    ['Cancel', back, 'ghost'],
+  modal(`<h2>${tr('gate.title')}</h2>${note}<p>${tr('gate.question', { a, b })}</p><input id="gate" type="number" inputmode="numeric">`, [
+    [tr('btn.ok'), () => (+$('gate').value === a * b ? then() : grownUp(then, back, `<p>${tr('gate.wrong')}</p>`))],
+    [tr('btn.cancel'), back, 'ghost'],
   ]);
   $('gate').focus();
 }
 
 function settingsCard() {
-  let html = `<h2>:gear: Grown-up settings</h2><p>Played this week: ${Math.round(week.used / 60)} of ${S.week} min<br>Autonomy: level ${autoLevel()[0]} (${auto.pts} points)</p>`;
+  let html = `<h2>${tr('settings.title')}</h2><p>${tr('settings.info', { used: Math.round(week.used / 60), total: S.week, lv: autoLevel()[0], pts: auto.pts })}</p>`;
   for (const [head, fields] of FORM) {
-    html += `<h3>${head}</h3>`;
-    for (const [k, label] of Object.entries(fields))
+    html += `<h3>${tr(head)}</h3>`;
+    for (const k of fields) {
+      const label = tr(COLORS[k] ? 'color.' + k : 'set.' + k);
       html += typeof DEFAULTS[k] === 'number'
         ? `<label class="row">${icons(label)}<input type="number" min="0" step="any" id="s_${k}" value="${S[k]}"></label>`
         : `<label class="row"><input type="checkbox" id="s_${k}" ${S[k] ? 'checked' : ''}>${icons(label)}</label>`;
+    }
   }
   modal(html, [
-    ['Save', () => {
+    [tr('btn.save'), () => {
       for (const k in DEFAULTS) S[k] = typeof DEFAULTS[k] === 'number' ? Math.max(0, +$('s_' + k).value || 0) : $('s_' + k).checked;
       put('settings', S); showTitle();
     }],
-    ['Reset autonomy level', () => { auto.pts = 0; put('auto', auto); settingsCard(); }, 'ghost'],
-    ["Reset this week's time", () => { week.used = 0; put('week', week); day = {}; put('day', day); settingsCard(); }, 'ghost'],
-    ['Cancel', showTitle, 'ghost'],
+    [tr('btn.resetAuto'), () => { auto.pts = 0; put('auto', auto); settingsCard(); }, 'ghost'],
+    [tr('btn.resetWeekTime'), () => { week.used = 0; put('week', week); day = {}; put('day', day); settingsCard(); }, 'ghost'],
+    [tr('btn.cancel'), showTitle, 'ghost'],
   ]);
 }
 
@@ -245,19 +245,19 @@ function showTitle() {
   cv.style.filter = lastFilter = '';
   $('hud').classList.add('hidden'); $('pad').classList.add('hidden'); $('title').classList.remove('hidden');
   const wl = Math.max(0, Math.min(S.week * 60 - week.used, dayLeft())), save = get('save', null);
-  $('weekInfo').innerHTML = icons(`:trophy: Autonomy level ${autoLevel()[0]}<br>`) + icons( wl > 0 ? `Play time left today: ${Math.ceil(wl / 60)} min`
-    : dayLeft() <= 0 ? "Today's play time is used up. See you tomorrow! :moon:" : "This week's play time is used up. It comes back on Monday! :moon:");
+  $('weekInfo').innerHTML = icons(tr('title.autoLevel', { n: autoLevel()[0] }) + '<br>' + (wl > 0 ? tr('title.leftToday', { min: Math.ceil(wl / 60) })
+    : tr(dayLeft() <= 0 ? 'title.dayUsed' : 'title.weekUsed')));
   $('continue').classList.toggle('hidden', !save || wl <= 0);
   $('newGame').classList.toggle('hidden', wl <= 0);
   $('resetWeek').classList.toggle('hidden', wl > 0);
 }
 
 function calm(done, back) {
-  card(`<h2>:breathe: Hold the phone still<br>and breathe slowly</h2><div class="breathe"></div><p id="breath"></p><i class="bar"><b id="prog"></b></i>`, done, back);
+  card(`<h2>${tr('calm.title')}</h2><div class="breathe"></div><p id="breath"></p><i class="bar"><b id="prog"></b></i>`, done, back);
   let still = 0;
   activityTick = () => {
     still = motion < STILL ? still + 1 : Math.max(0, still - 2);
-    $('breath').textContent = t % 480 < 240 ? 'Breathe in…' : 'Breathe out…';
+    $('breath').textContent = txt(t % 480 < 240 ? 'calm.in' : 'calm.out');
     progress(still / (CALM_SECONDS * 60));
     if (still >= CALM_SECONDS * 60) { activityTick = null; done(); }
   };
@@ -265,7 +265,7 @@ function calm(done, back) {
 
 function walk(done, back) {
   const start = steps;
-  card(`<h2>:walk: Walk ${S.steps} steps</h2><p class="big" id="count">0</p><p>Hold the phone and walk around the room</p><i class="bar"><b id="prog"></b></i>`, done, back);
+  card(`<h2>${tr('walk.title', { steps: S.steps })}</h2><p class="big" id="count">0</p><p>${tr('walk.text')}</p><i class="bar"><b id="prog"></b></i>`, done, back);
   activityTick = () => {
     const n = steps - start;
     $('count').textContent = `${n} / ${S.steps}`;
@@ -275,12 +275,12 @@ function walk(done, back) {
 }
 
 function rest(done, back) {
-  card(`<h2>:phone: Put the phone face down</h2><p id="msg">Leave it there for ${S.restSecs} seconds and do something else.<br>If you pick it up, the time starts again!</p><i class="bar"><b id="prog"></b></i>`, done, back);
+  card(`<h2>${tr('rest.title')}</h2><p id="msg">${tr('rest.text', { s: S.restSecs })}</p><i class="bar"><b id="prog"></b></i>`, done, back);
   let n = 0, down = false;
   activityTick = () => {
     const now = keys.KeyF || Math.abs(beta) > (down ? FACE_UP : FACE_DOWN);
     if (now && !down) sfx(523, 0.15);
-    if (!now && down && n) { n = 0; sfx(196, 0.3, 'sawtooth'); $('msg').textContent = 'You picked it up! Put it back face down, the time starts again'; }
+    if (!now && down && n) { n = 0; sfx(196, 0.3, 'sawtooth'); $('msg').textContent = txt('rest.picked'); }
     down = now;
     if (down) n++;
     progress(n / (S.restSecs * 60));
@@ -289,14 +289,14 @@ function rest(done, back) {
 }
 
 function hum(done, back) {
-  const id = card(`<h2>:hum: Hum your favorite song</h2><p id="msg">Keep humming until the bar is full</p><i class="bar"><b id="prog"></b></i>`, done, back);
+  const id = card(`<h2>${tr('hum.title')}</h2><p id="msg">${tr('hum.text')}</p><i class="bar"><b id="prog"></b></i>`, done, back);
   navigator.mediaDevices?.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
     .then(s => {
       if (id !== cardId) return s.getTracks().forEach(k => k.stop());
       stream = s; analyser = ac.createAnalyser(); analyser.fftSize = 512;
       ac.createMediaStreamSource(s).connect(analyser);
     })
-    .catch(() => $('msg') && ($('msg').textContent = 'Microphone not available, try another activity'));
+    .catch(() => $('msg') && ($('msg').textContent = txt('hum.noMic')));
   let n = 0;
   activityTick = () => {
     if (readMic() > HUM_LEVEL) n++;
@@ -308,13 +308,14 @@ function hum(done, back) {
 function photo(done, back) {
   const names = Object.keys(COLORS).filter(c => S[c]), name = pick(names.length ? names : Object.keys(COLORS));
   const [hue, hex] = COLORS[name];
-  const id = modal(`<h2>:camera: Find something <b style="color:${hex}">${name.toUpperCase()}</b></h2><div class="cam"><video playsinline muted autoplay></video></div><p id="msg">Fill the square with it and press SNAP</p>`, [
-    [':camera: SNAP', snap], [':back: Back', back, 'ghost'], ['Skip (PC test)', done, 'ghost pc'],
+  const color = txt('color.' + name);
+  const id = modal(`<h2>${tr('photo.title', { color: `<b style="color:${hex}">${tr('color.' + name).toUpperCase()}</b>` })}</h2><div class="cam"><video playsinline muted autoplay></video></div><p id="msg">${tr('photo.text')}</p>`, [
+    [tr('btn.snap'), snap], [tr('btn.back'), back, 'ghost'], [tr('btn.skip'), done, 'ghost pc'],
   ]);
   const video = $('modal').querySelector('video');
   navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
     .then(s => { if (id !== cardId) return s.getTracks().forEach(k => k.stop()); stream = s; video.srcObject = s; })
-    .catch(() => $('msg') && ($('msg').textContent = 'Camera not available, try another activity'));
+    .catch(() => $('msg') && ($('msg').textContent = txt('photo.noCam')));
 
   function snap() {
     if (!video.videoWidth) return;
@@ -328,7 +329,7 @@ function photo(done, back) {
       if (s > 0.3 && l > 0.15 && l < 0.85 && Math.min(dh, 360 - dh) < 22) match++;
     }
     if (match > 24 * 24 * 0.3) { sfx(784, 0.1); sfx(1047, 0.2); done(); }
-    else $('msg').textContent = `Hmm, I don't see ${name} yet. Get closer and try again!`;
+    else $('msg').textContent = txt('photo.miss', { color: color.toLowerCase() });
   }
 }
 
@@ -344,21 +345,21 @@ const devFx = {};
 function devCard() {
   const end = S.session * 60 + extra, clock = s => () => { used = s; closeModal(); };
   const toggle = (k, label) => [(devFx[k] ? ':check: ' : '') + label, () => { devFx[k] = !devFx[k]; devCard(); }, devFx[k] ? '' : 'ghost'];
-  const angryShake = () => { closeModal(); invertUntil = t + 30 * 60; toast('Shaking scrambled the controls!\nTap :breathe: to calm down'); };
-  const lockWeek = () => { week.used = S.week * 60; put('week', week); endSession('This week is used up'); };
-  modal(`<h2>:dev: Dev mode</h2><p>Jump the clock: the real sequence plays<br>(it follows the grown-up settings)</p>`, [
-    [':coffee: Break', () => { closeModal(); breakTime(); }],
-    [':hourglass: Wind down', clock(end - S.warn * 60 + 1)],
-    [":clock: Time's up", () => { timeUp = false; clock(end)(); }],
-    ...[0, 2, 4, 6].map(m => [`${S.streak + m} min no break`, () => { sinceBreak = (S.streak + m) * 60 + 0.5; closeModal(); }]),
-    [':reset: Reset clock', () => { used = extra = sinceBreak = snoozes = finishBy = invertUntil = 0; warned = timeUp = streakWarned = false; for (const k in devFx) devFx[k] = false; closeModal(); }],
+  const angryShake = () => { closeModal(); invertUntil = t + 30 * 60; toast(tr('toast.shake')); };
+  const lockWeek = () => { week.used = S.week * 60; put('week', week); endSession('end.weekUsed'); };
+  modal(`<h2>${tr('dev.title')}</h2><p>${tr('dev.text')}</p>`, [
+    [tr('dev.break'), () => { closeModal(); breakTime(); }],
+    [tr('dev.wind'), clock(end - S.warn * 60 + 1)],
+    [tr('dev.timeUp'), () => { timeUp = false; clock(end)(); }],
+    ...[0, 2, 4, 6].map(m => [tr('dev.noBreak', { min: S.streak + m }), () => { sinceBreak = (S.streak + m) * 60 + 0.5; closeModal(); }]),
+    [tr('dev.reset'), () => { used = extra = sinceBreak = snoozes = finishBy = invertUntil = 0; warned = timeUp = streakWarned = false; for (const k in devFx) devFx[k] = false; closeModal(); }],
   ]);
-  $('modal').querySelector('.btns').insertAdjacentHTML('afterend', '<p>Or switch one effect on by itself:</p><div class="btns" id="devToggles"></div>');
+  $('modal').querySelector('.btns').insertAdjacentHTML('afterend', `<p>${tr('dev.one')}</p><div class="btns" id="devToggles"></div>`);
   for (const [label, fn, cls] of [
-    toggle('gray', ':gray: Gray'), toggle('negative', ':negative: Negative'), toggle('music', ':slow: Music slow/off-key'),
-    toggle('invert', ':swap: Swap controls'), toggle('betray', ':blind: Ignore jumps'),
-    [':angry: Angry shake', angryShake, 'ghost'],
-    [':lock: Use up the week', lockWeek, 'ghost'], [':close: Close', closeModal],
+    toggle('gray', tr('dev.gray')), toggle('negative', tr('dev.negative')), toggle('music', tr('dev.music')),
+    toggle('invert', tr('dev.invert')), toggle('betray', tr('dev.betray')),
+    [tr('dev.angry'), angryShake, 'ghost'],
+    [tr('dev.lockWeek'), lockWeek, 'ghost'], [tr('btn.close'), closeModal],
   ]) {
     const b = document.createElement('button');
     b.innerHTML = icons(label); b.className = cls || ''; onPress(b, fn);
@@ -373,7 +374,7 @@ onPress($('resetWeek'), () => {
   const reset = () => { week.used = 0; put('week', week); day = {}; put('day', day); showTitle(); };
   S.dev ? reset() : grownUp(reset, showTitle);
 });
-onPress($('pause'), () => modal('<h2>:pause: Paused</h2>', [[':play: Resume', closeModal], [':flag: Stop playing', () => endSession()]]));
+onPress($('pause'), () => modal(`<h2>${tr('pause.title')}</h2>`, [[tr('btn.resume'), closeModal], [tr('btn.stopPlaying'), () => endSession()]]));
 onPress($('devBtn'), devCard);
-onPress($('calmBtn'), () => calm(() => { invertUntil = 0; modal(`<h2>Controls are back to normal :smile:</h2>${gain(1)}`, [[':play: Back to the game', closeModal]]); }, closeModal));
+onPress($('calmBtn'), () => calm(() => { invertUntil = 0; modal(`<h2>${tr('calm.fixed')}</h2>${gain(1)}`, [[tr('btn.backToGame'), closeModal]]); }, closeModal));
 showTitle();
