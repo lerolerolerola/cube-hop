@@ -148,6 +148,7 @@ button .ic { width: 1.8em; height: 1.8em; vertical-align: -0.6em; margin: -0.3em
   background: #1b1f4b99;
 }
 .screen p { font-size: 19px; line-height: 1.4; }
+.screen p.pc { max-width: min(620px, 90vw); margin-inline: auto; }
 #modal { z-index: 8; }
 h1 { font-family: var(--pixel); font-size: 44px; line-height: 1.2; color: var(--yellow); text-shadow: 4px 4px 0 var(--red); }
 h2 { font-family: var(--pixel); font-size: 18px; line-height: 1.6; font-weight: 400; color: var(--yellow); }
